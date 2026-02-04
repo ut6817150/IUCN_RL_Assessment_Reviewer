@@ -457,6 +457,11 @@ def run_batch_default(parser: AssessmentParser) -> int:
     return 0
 
 
+def parse_docx_to_dict(docx_path: str) -> Dict[str, Any]:
+    parser = AssessmentParser()
+    return parser.parse_file(docx_path)
+
+
 def main() -> int:
     """
     - No args: run batch with default folders
