@@ -1,0 +1,33 @@
+IUCN Red List Assessment: Pseudomys fictus (Fictional Mouse)
+
+Taxonomy
+Kingdom: Animalia
+Phylum: Chordata
+Class: Mammalia
+Order: Rodentia
+Family: Muridae
+Species: Pseudomys fictus (Smith, 2010)
+
+Taxonomic Notes
+There are no taxonomic issues worth mentioning. The species was described by Smith in 2010.
+
+Rationale
+This species is listed as Data Deficient.
+
+Geographic Range
+Pseudomys fictus is found in Australia. It has been recorded in several places. Some individuals have also been observed. The species may also occur in other areas.
+
+Population
+The population of this species has not been studied in much detail. Some researchers think there might be around 5,000 individuals but this could be wrong. The population has declined by 30% due to reasons. The population is estimated to be between 2,000 and 8,000 mature individuals in total.
+
+Habitat and Ecology
+Pseudomys fictus lives in various habitats. It is a nocturnal species that feeds on seeds and and insects. The species exhibits crepuscular-cathemeral activity patterns with ontogenetic niche partitioning across heterogeneous microhabitat mosaics, displaying phenotypic plasticity in thermoregulatory behavioral repertoires. The home range utilization distribution kernel density estimation suggests an asymptotic accumulation curve for spatial autocorrelation of telemetric fixes. It occupies tropical rainforest.
+
+Threats
+The species faces threats. Habitat loss is a problem for many species in the region. Climate change may also impact wildlife in Australia in the future.
+
+Conservation Actions
+Conservation actions are needed to protect this species and ensure its long-term survival and continued persistence and ongoing viability in the wild.
+
+Bibliography
+Various sources were consulted in preparing this assessment.
