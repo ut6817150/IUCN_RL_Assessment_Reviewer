@@ -2,6 +2,7 @@ import json
 import sys
 from pathlib import Path
 from datetime import datetime
+from rag_retriever import retrieve_context
 from ollama import chat
 
 SCRIPT_DIR = Path(__file__).parent
@@ -22,10 +23,13 @@ def load_prompt_template(template_path: Path) -> str:
 def check_single_rule(assessment_text: str, rule: dict, system_prompt: str) -> dict:
     rule_text = rule["Rule/Standard"]
 
+    rag_ctx = retrieve_context(rule_text, top_k=4)
+
     response = chat(
         model="deepseek-r1:1.5b",
         messages=[
             {"role": "system", "content": system_prompt},
+            {"role": "system", "content": f"RETRIEVED CONTEXT (Standards):\n{rag_ctx}"},
             {"role": "user", "content": assessment_text},
             {"role": "system", "content": f"RULE TO CHECK: {rule_text}"},
         ],
@@ -38,6 +42,7 @@ def check_single_rule(assessment_text: str, rule: dict, system_prompt: str) -> d
         "rule": rule_text,
         "assessment_section": rule["Assessment Section"],
         "rationale": rule["Rationale"],
+        "retrieved_context": rag_ctx,  # suitable for debugging
         "feedback": response.message.content,
         "thinking": response.message.thinking,
     }
