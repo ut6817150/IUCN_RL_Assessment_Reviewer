@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Callable, Union
 import re
 
-from ..models import Violation, TextPosition, Severity, RuleDefinition
+from models import Violation, TextPosition, Severity, RuleDefinition
 
 
 class BaseChecker(ABC):

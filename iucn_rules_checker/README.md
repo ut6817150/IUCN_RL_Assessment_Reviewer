@@ -15,6 +15,7 @@ IUCN Checker enforces standardized conventions for scientific assessments, inclu
 - **Multiple output formats** including JSON and pretty-printed summaries
 - **No external dependencies** - uses only Python standard library
 - **Dual interface** - CLI tool and importable Python library
+- **Comprehensive test suite** - 22+ tests covering all major checkers
 
 ## Installation
 
@@ -24,6 +25,26 @@ No installation required beyond Python 3.7+. Clone the repository and run direct
 git clone <repository-url>
 cd code
 ```
+
+### Development Setup (Recommended)
+
+For development and testing, set up a virtual environment:
+```bash
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate  # On macOS/Linux
+# OR
+venv\Scripts\activate  # On Windows
+
+# Install in editable mode with dependencies
+pip install -e .
+
+# Install testing dependencies
+pip install pytest pytest-cov
+```
+
 
 ## Usage
 
@@ -79,6 +100,52 @@ for violation in report.violations:
     print(f"Line {violation.position.line}: {violation.message}")
     if violation.suggested_fix:
         print(f"  Suggestion: {violation.suggested_fix}")
+```
+
+## Testing
+
+The project includes a comprehensive test suite to ensure accuracy and reliability.
+
+### Running Tests
+```bash
+# Run all tests
+python -m pytest tests/ -v
+
+# Run specific test file
+python -m pytest tests/test_formatting.py -v
+
+# Run tests with coverage report
+python -m pytest tests/ --cov=checkers --cov-report=html
+
+# Run tests with detailed output
+python -m pytest tests/ -v -s
+```
+
+### Test Coverage
+
+The test suite includes:
+- **Unit tests** for individual checkers (formatting, numbers, punctuation, spelling)
+- **Integration tests** for the complete checking pipeline
+- **Edge case tests** for unusual inputs and performance
+- **CLI tests** for command-line interface functionality
+
+Current test metrics:
+- **22+ comprehensive tests**
+- **Coverage of all major rule categories**
+- **Validation of suggested fixes**
+- **False positive detection and prevention**
+
+### Test Structure
+```
+tests/
+├── conftest.py              # Shared fixtures
+├── test_formatting.py       # Scientific name and italics tests
+├── test_numbers.py          # Number formatting tests
+├── test_punctuation.py      # En-dash and punctuation tests
+├── test_spelling.py         # UK/US spelling tests
+├── test_integration.py      # End-to-end tests
+├── test_edge_cases.py       # Edge cases and performance
+└── test_cli.py              # Command-line interface tests
 ```
 
 ## Categories
@@ -155,25 +222,33 @@ When used as a CLI tool:
 
 ```
 code/
-├── iucn_checker/
+├── checkers/
 │   ├── __init__.py          # Package exports
-│   ├── __main__.py          # CLI entry point
-│   ├── main.py              # CLI argument parsing
-│   ├── engine.py            # Core checking orchestration
-│   ├── models.py            # Data models (Violation, Report)
-│   └── checkers/            # Rule implementations
-│       ├── base.py          # Abstract base classes
-│       ├── spelling.py      # UK spelling rules
-│       ├── numbers.py       # Number formatting
-│       ├── dates.py         # Date formatting
-│       ├── abbreviations.py # Abbreviation rules
-│       ├── symbols.py       # Symbols and units
-│       ├── punctuation.py   # Punctuation rules
-│       ├── iucn_terms.py    # IUCN terminology
-│       ├── geography.py     # Geographic naming
-│       ├── scientific.py    # Scientific names
-│       ├── references.py    # Citation formatting
-│       └── formatting.py    # Text formatting
+│   ├── base.py              # Abstract base classes
+│   ├── spelling.py          # UK spelling rules
+│   ├── numbers.py           # Number formatting
+│   ├── dates.py             # Date formatting
+│   ├── abbreviations.py     # Abbreviation rules
+│   ├── symbols.py           # Symbols and units
+│   ├── punctuation.py       # Punctuation rules
+│   ├── iucn_terms.py        # IUCN terminology
+│   ├── geography.py         # Geographic naming
+│   ├── scientific.py        # Scientific names
+│   ├── references.py        # Citation formatting
+│   └── formatting.py        # Text formatting
+├── tests/                   # Comprehensive test suite
+│   ├── conftest.py
+│   ├── test_formatting.py
+│   ├── test_numbers.py
+│   ├── test_punctuation.py
+│   ├── test_spelling.py
+│   ├── test_integration.py
+│   ├── test_edge_cases.py
+│   └── test_cli.py
+├── engine.py                # Core checking orchestration
+├── models.py                # Data models (Violation, Report)
+├── main.py                  # CLI entry point
+├── setup.py                 # Package configuration
 ├── IUCN_Assessment_Rules.json
 └── IUCN_Assessment_Rules.xlsx
 ```
@@ -228,6 +303,7 @@ fi
 
 - Python 3.7 or higher
 - No external dependencies
+- pytest 7.0+ (for running tests)
 
 ## License
 

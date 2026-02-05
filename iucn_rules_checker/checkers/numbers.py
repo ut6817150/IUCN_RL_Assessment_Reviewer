@@ -3,8 +3,8 @@
 import re
 from typing import List
 
-from .base import BaseChecker
-from ..models import Violation, Severity
+from checkers.base import BaseChecker
+from models import Violation, Severity
 
 
 class NumberChecker(BaseChecker):

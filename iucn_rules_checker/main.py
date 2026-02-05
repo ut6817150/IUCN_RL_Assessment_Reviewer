@@ -7,9 +7,8 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from .engine import IUCNRuleChecker
-from .models import Severity
-
+from engine import IUCNRuleChecker
+from models import Severity
 
 def main():
     """Main CLI entry point."""

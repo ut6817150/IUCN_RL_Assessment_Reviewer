@@ -10,8 +10,8 @@ The DOCX-to-JSON conversion should preserve formatting as HTML tags.
 import re
 from typing import List, Tuple, Set
 
-from .base import BaseChecker
-from ..models import Violation, Severity
+from checkers.base import BaseChecker
+from models import Violation, Severity
 
 
 class FormattingChecker(BaseChecker):
@@ -120,6 +120,20 @@ class FormattingChecker(BaseChecker):
             'Smith', 'Jones', 'Brown', 'Wilson', 'Johnson', 'Williams', 'Taylor',
             'January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December',
+            'Very', 'More', 'Less', 'Blue', 'Red', 'Green', 'Black', 'White',
+            'Past', 'Present', 'Future', 'Long', 'Short', 'High', 'Low',
+            'Large', 'Small', 'Good', 'Bad', 'New', 'Old', 'First', 'Last',
+            'Whole', 'Part', 'Full', 'Empty', 'Wild', 'Domestic', 'Native',
+            'Foreign', 'Local', 'Global', 'National', 'International', 'Regional',
+            'Continued', 'Continuing', 'Systematic', 'Area', 'Invasive', 'Harvest',
+            'Successfully', 'Genome', 'List', 'Endemic', 'Forest', 'Overwinter',
+            'Biological', 'Intentional', 'Named', 'Shifting', 'Republic', 'Please',
+            'Use', 'Geographic', 'Date', 'Map', 'Further', 'Extreme', 'Severely',
+            'Australian', 'Maestra', 'Satellite', 'Jamaican', 'Park', 'High',
+            'Targeted', 'Portland', 'Granma', 'Estimated', 'Lower', 'Mountain',
+            'Is', 'Are', 'Was', 'Were', 'Has', 'Have', 'Had',
+            'Santiago', 'Saint', 'Sierra', 'Monte',  # Place names
+            'Blue', 'Green', 'Red', 'White', 'Black',  # Colors often in place names
         }
 
         # Common English second words (skip these as species epithet)
@@ -135,7 +149,22 @@ class FormattingChecker(BaseChecker):
             'et', 'al', 'etal',  # Skip "et al" patterns
             'studies', 'shows', 'found', 'reported', 'suggests', 'indicates',
             'between', 'among', 'within', 'across', 'along', 'through', 'under',
+            'restricted', 'available', 'map', 'state', 'range', 'restriction',
+            'created', 'fluctuations', 'fragmented', 'decline', 'mountains',
+            'imagery', 'relative', 'detail', 'harvest', 'road', 'clearance',
+            'tree', 'term', 'mountain', 'due', 'agriculture', 'resource',
+            'use', 'species', 'based', 'plan', 'control', 'management',
+            'reintroduced', 'monitoring', 'change', 'rates', 'establishment',
+            'montane', 'factsheet', 'status', 'threat', 'paper',
+            'surveys', 'parishes', 'provinces', 'area', 'extent', 'estimate',
+            'subpopulation', 'there', 'here',
         }
+
+        #checking if word looks like it could be latin
+        def looks_like_latin(word):
+            """Simple heuristic: Latin words often have certain endings."""
+            latin_endings = ('us', 'a', 'um', 'is', 'e', 'ensis', 'oides', 'ella', 'ina', 'ana')
+            return word.lower().endswith(latin_endings) and len(word) >= 4
 
         for match in binomial_pattern.finditer(text):
             genus = match.group(1)
@@ -153,8 +182,17 @@ class FormattingChecker(BaseChecker):
                 continue
 
             # Skip very short species epithets (likely not Latin)
-            if len(species) < 3:
+            if len(species) < 4:
                 continue
+
+            # Additional check: at least one word should look Latin-ish
+            if not (looks_like_latin(genus) or looks_like_latin(species)):
+                # If neither looks Latin, be more cautious
+                # Only flag if both are uncommon words (not in any common word list)
+                if genus.lower() in [w.lower() for w in common_first_words]:
+                    continue
+                if species.lower() in common_second_words:
+                    continue
 
             # Check if already italicized
             if not self._is_inside_italic(text, match.start(), match.end()):

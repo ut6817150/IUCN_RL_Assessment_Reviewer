@@ -2,8 +2,8 @@
 
 from typing import List, Optional, Set, Dict
 
-from .models import Violation, ViolationReport, Severity
-from .checkers import (
+from models import Violation, ViolationReport, Severity
+from checkers import (
     BaseChecker,
     SpellingChecker,
     NumberChecker,
