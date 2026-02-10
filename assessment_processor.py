@@ -29,6 +29,7 @@ from docx import Document
 from docx.document import Document as _Document
 from docx.table import Table
 from docx.text.paragraph import Paragraph
+from bs4 import BeautifulSoup
 
 
 # Default folders in the same directory
@@ -72,17 +73,25 @@ class AssessmentParser:
     W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
     NS = {"w": W_NS}
 
-    def parse_file(self, docx_path: str) -> Dict[str, Any]:
-        """Main file parser, takes one DOCX file and produces a JSON dict."""
-        doc = Document(docx_path)
+    def parse_file(self, path: str) -> Dict[str, Any]:
+        p = Path(path)
+        ext = p.suffix.lower()
 
-        doc_title = Path(docx_path).stem
-        root = self._build_heading_skeleton(doc, doc_title=doc_title)
-        self._attach_blocks(doc, root)
+        if ext == ".docx":
+            doc = Document(path)
+            doc_title = p.stem
+            root = self._build_heading_skeleton(doc, doc_title=doc_title)
+            self._attach_blocks(doc, root)
 
-        out = root.to_dict()
-        out["comments"] = self._extract_comments_with_anchors(docx_path)
-        return out
+            out = root.to_dict()
+            out["comments"] = self._extract_comments_with_anchors(path)
+            return out
+
+        if ext in (".html", ".htm"):
+            return self._parse_html(path)
+
+        raise ValueError(f"Unsupported file type: {ext}")
+
 
 
     # DOCX traversal:
@@ -404,6 +413,96 @@ class AssessmentParser:
                 }
             )
         return out
+    
+    def _parse_html(self, html_path: str) -> Dict[str, Any]:
+        """
+        Parse an HTML file into the same dict schema as DOCX.
+
+        Comments: HTML typically has none => [].
+        """
+        # NEW IMPORT needed at top:
+        # from bs4 import BeautifulSoup
+
+        html = Path(html_path).read_text(encoding="utf-8", errors="ignore")
+        soup = BeautifulSoup(html, "html.parser")
+
+        doc_title = Path(html_path).stem
+        root = HeadingNode(title=doc_title, level=0, path=[], blocks=[], children=[])
+
+        current_h1: Optional[HeadingNode] = None
+        current_h2: Optional[HeadingNode] = None
+
+        def container() -> HeadingNode:
+            return current_h2 or current_h1 or root
+
+        def set_heading(title: str, lvl: int) -> None:
+            nonlocal current_h1, current_h2
+            title = (title or "").strip()
+            if not title:
+                return
+
+            if lvl == 1:
+                node = HeadingNode(title=title, level=1, path=[title], blocks=[], children=[])
+                root.children.append(node)
+                current_h1, current_h2 = node, None
+                return
+
+            if lvl == 2:
+                if current_h1 is None:
+                    node = HeadingNode(title=title, level=2, path=[title], blocks=[], children=[])
+                    root.children.append(node)
+                    current_h2 = node
+                else:
+                    node = HeadingNode(title=title, level=2, path=current_h1.path + [title], blocks=[], children=[])
+                    current_h1.children.append(node)
+                    current_h2 = node
+
+        def clean_text(el) -> str:
+            return " ".join(el.get_text(" ", strip=True).split())
+
+        # iterate in DOM order: headings + p + lists + tables
+        for el in soup.find_all(["h1", "h2", "p", "ul", "ol", "table"]):
+            name = el.name.lower()
+
+            if name == "h1":
+                set_heading(clean_text(el), 1)
+                continue
+            if name == "h2":
+                set_heading(clean_text(el), 2)
+                continue
+
+            if name == "p":
+                text = clean_text(el)
+                if text:
+                    container().blocks.append({"type": "paragraph", "text": text, "style": "HTML:p"})
+                continue
+
+            if name in ("ul", "ol"):
+                items = []
+                for li in el.find_all("li", recursive=False):
+                    t = clean_text(li)
+                    if t:
+                        items.append({"text": t, "style": f"HTML:{name}/li"})
+                if items:
+                    container().blocks.append({"type": "list", "signature": f"HTML:{name}", "items": items})
+                continue
+
+            if name == "table":
+                rows: List[List[str]] = []
+                for tr in el.find_all("tr"):
+                    row = []
+                    for cell in tr.find_all(["th", "td"]):
+                        row.append(clean_text(cell))
+                    if row:
+                        rows.append(row)
+                if rows:
+                    container().blocks.append({"type": "table", "rows": rows})
+                continue
+
+        out = root.to_dict()
+        out["comments"] = []  # no DOCX comment anchors in plain HTML
+        return out
+
 
 
 # Processor for multible documents:
@@ -418,25 +517,28 @@ def run_batch_default(parser: AssessmentParser) -> int:
 
     out_path.mkdir(parents=True, exist_ok=True)
 
-    docx_files = sorted(p for p in in_path.iterdir() if p.is_file() and p.suffix.lower() == ".docx")
-    if not docx_files:
+    files = sorted(
+    p for p in in_path.iterdir()
+    if p.is_file() and p.suffix.lower() in (".docx", ".html", ".htm")
+    )
+    if not files:
         print(f"No .docx files found in {in_path}")
         return 0
 
     errors: List[Dict[str, str]] = []
     parsed = 0
 
-    for docx_file in docx_files:
+    for file in files:
         try:
-            data = parser.parse_file(str(docx_file))
-            json_file = out_path / f"{docx_file.stem}.json"
+            data = parser.parse_file(str(file))
+            json_file = out_path / f"{file.stem}.json"
             with open(json_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             parsed += 1
-            print(f"Done: {docx_file.name}")
+            print(f"Done: {file.name}")
         except Exception as e:
-            errors.append({"file": docx_file.name, "error": repr(e)})
-            print(f"Failed: {docx_file.name} ({e!r})")
+            errors.append({"file": file.name, "error": repr(e)})
+            print(f"Failed: {file.name} ({e!r})")
 
     errors_file = out_path / "_errors.json"
     with open(errors_file, "w", encoding="utf-8") as f:
@@ -444,7 +546,7 @@ def run_batch_default(parser: AssessmentParser) -> int:
             {
                 "input_folder": str(in_path),
                 "output_folder": str(out_path),
-                "total": len(docx_files),
+                "total": len(files),
                 "parsed": parsed,
                 "failed": len(errors),
                 "errors": errors,
@@ -454,7 +556,7 @@ def run_batch_default(parser: AssessmentParser) -> int:
             ensure_ascii=False,
         )
 
-    print(f"\nDone: {parsed}/{len(docx_files)} parsed. Errors: {errors_file.name}")
+    print(f"\nDone: {parsed}/{len(files)} parsed. Errors: {errors_file.name}")
     return 0
 
 
@@ -474,7 +576,7 @@ def main() -> int:
     if not args:
         return run_batch_default(parser)
 
-    if len(args) == 1 and args[0].lower().endswith(".docx"):
+    if len(args) == 1 and args[0].lower().endswith((".docx", ".html", ".htm")):
         data = parser.parse_file(args[0])
         print(json.dumps(data, indent=2, ensure_ascii=False))
         return 0
