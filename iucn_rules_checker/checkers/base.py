@@ -6,7 +6,6 @@ import re
 
 from models import Violation, TextPosition, Severity, RuleDefinition
 
-
 class BaseChecker(ABC):
     """Abstract base class for all rule checkers."""
 

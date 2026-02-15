@@ -1,6 +1,7 @@
 """Main IUCN rule checker engine."""
 
 from typing import List, Optional, Set, Dict
+from streamlit_json_validator import StreamlitAssessmentValidator
 
 from models import Violation, ViolationReport, Severity
 from checkers import (
@@ -52,6 +53,8 @@ class IUCNRuleChecker:
         # Initialize all checkers
         self._checkers: List[BaseChecker] = self._create_checkers()
 
+        self.json_validator = StreamlitAssessmentValidator()
+
     def _create_checkers(self) -> List[BaseChecker]:
         """Create and return all available checkers."""
         return [
@@ -71,52 +74,95 @@ class IUCNRuleChecker:
     def get_available_categories(self) -> Set[str]:
         """Get all available checker categories."""
         return {checker.category for checker in self._checkers}
-
-    def check(self, text: str) -> ViolationReport:
-        """Run all enabled checks against the text.
-
+    
+    
+    def check_json(self, json_data: Dict) -> ViolationReport:
+        """Check assessment from Streamlit JSON.
+        
         Args:
-            text: The text to check for rule violations.
-
+            json_data: Parsed JSON from Streamlit (hierarchical structure)
+            
         Returns:
-            ViolationReport containing all found violations and summary statistics.
+            ViolationReport with all violations found
         """
-        if not text:
-            return self._build_report("", [], [], [])
-
-        all_violations: List[Violation] = []
-        checked_rules: List[str] = []
-        skipped_rules: List[str] = []
-
+        all_violations = []
+        checked_rules = []
+        skipped_rules = []
+        
+        # 1. Run JSON structure validation
+        json_report, full_text = self.json_validator.validate(json_data)
+        all_violations.extend(json_report.violations)
+        checked_rules.extend(json_report.checked_rules)
+        
+        # 2. Run text-based checkers on extracted text
         for checker in self._checkers:
-            # Skip if category not enabled
+            # Check if this category is enabled
             if self.enabled_categories and checker.category not in self.enabled_categories:
                 skipped_rules.append(checker.rule_id)
                 continue
-
-            # Skip if rule explicitly disabled
+            
+            # Check if this rule is disabled
             if checker.rule_id in self.disabled_rules:
                 skipped_rules.append(checker.rule_id)
                 continue
+            
+            # Run the checker
+            checked_rules.append(checker.rule_id)
+            text_violations = checker.check(full_text)
+            
+            # Filter by severity
+            for v in text_violations:
+                if self._severity_value(v.severity) >= self._severity_value(self.min_severity):
+                    all_violations.append(v)
+        
+        return self._build_report(
+            text=full_text,
+            violations=all_violations,
+            checked_rules=checked_rules,
+            skipped_rules=skipped_rules
+        )
 
-            # Run the check
-            try:
-                violations = checker.check(text)
 
-                # Filter by minimum severity
-                violations = [
-                    v for v in violations
-                    if self._severity_value(v.severity) >= self._severity_value(self.min_severity)
-                ]
-
-                all_violations.extend(violations)
-                checked_rules.append(checker.rule_id)
-            except Exception as e:
-                # Log error but continue with other checks
-                print(f"Error in rule {checker.rule_id}: {e}")
+    def check(self, text: str) -> ViolationReport:
+        """Check plain text for IUCN rule violations.
+        
+        Args:
+            text: Plain text to check
+            
+        Returns:
+            ViolationReport with all violations found
+        """
+        violations = []
+        checked_rules = []
+        skipped_rules = []
+        
+        for checker in self._checkers:
+            # Check if this category is enabled
+            if self.enabled_categories and checker.category not in self.enabled_categories:
                 skipped_rules.append(checker.rule_id)
-
-        return self._build_report(text, all_violations, checked_rules, skipped_rules)
+                continue
+            
+            # Check if this rule is disabled
+            if checker.rule_id in self.disabled_rules:
+                skipped_rules.append(checker.rule_id)
+                continue
+            
+            # Run the checker
+            checked_rules.append(checker.rule_id)
+            checker_violations = checker.check(text)
+            
+            # Filter by severity
+            for v in checker_violations:
+                if self._severity_value(v.severity) >= self._severity_value(self.min_severity):
+                    violations.append(v)
+        
+        return self._build_report(
+            text=text,
+            violations=violations,
+            checked_rules=checked_rules,
+            skipped_rules=skipped_rules
+        )
+    
 
     def _severity_value(self, severity: Severity) -> int:
         """Convert severity to numeric value for comparison."""
@@ -130,12 +176,15 @@ class IUCNRuleChecker:
         skipped_rules: List[str]
     ) -> ViolationReport:
         """Build the final violation report."""
-        # Count by severity
-        by_severity: Dict[Severity, int] = {s: 0 for s in Severity}
+
+    # Count by severity (must use Severity enum as keys)
+        by_severity: Dict[Severity, int] = {}
         for v in violations:
+            if v.severity not in by_severity:
+                by_severity[v.severity] = 0
             by_severity[v.severity] += 1
 
-        # Count by category
+    # Count by category
         by_category: Dict[str, int] = {}
         for v in violations:
             if v.category not in by_category:

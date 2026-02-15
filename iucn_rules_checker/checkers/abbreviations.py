@@ -29,7 +29,7 @@ class AbbreviationChecker(BaseChecker):
         # Correct format for common abbreviations
         violations.extend(self._check_abbreviation_formats(text))
 
-        # Latin terms without periods
+        # Latin terms without periods and italicized
         violations.extend(self._check_latin_terms(text))
 
         # Title abbreviations
@@ -155,46 +155,88 @@ class AbbreviationChecker(BaseChecker):
         return violations
 
     def _check_latin_terms(self, text: str) -> List[Violation]:
-        """Check Latin terms that should NOT have periods."""
+        """Check Latin terms that should NOT have periods AND should be italicized."""
         violations = []
 
-        # in situ. -> in situ (no period)
-        insitu_pattern = re.compile(r'\bin\s*situ\.')
-        for match in insitu_pattern.finditer(text):
-            violations.append(self._create_violation(
-                text=text,
-                matched_text=match.group(0),
-                start=match.start(),
-                end=match.end(),
-                message="Use 'in situ' without period",
-                suggested_fix="in situ"
-            ))
+        # List of Latin terms to check
+        latin_terms = [
+            ('in situ', 'in natural habitat'),
+            ('ex situ', 'outside natural habitat'),
+            ('ad hoc', 'for this purpose'),
+            ('in vivo', 'in living organism'),
+            ('in vitro', 'in laboratory'),
+            ('sensu lato', 'in the broad sense'),
+            ('sensu stricto', 'in the strict sense'),
+            ('per se', 'by itself'),
+            ('de facto', 'in reality'),
+            ('vice versa', 'the other way around'),
+        ]
 
-        # ex situ. -> ex situ (no period)
-        exsitu_pattern = re.compile(r'\bex\s*situ\.')
-        for match in exsitu_pattern.finditer(text):
-            violations.append(self._create_violation(
-                text=text,
-                matched_text=match.group(0),
-                start=match.start(),
-                end=match.end(),
-                message="Use 'ex situ' without period",
-                suggested_fix="ex situ"
-            ))
-
-        # ad hoc. -> ad hoc (no period)
-        adhoc_pattern = re.compile(r'\bad\s*hoc\.')
-        for match in adhoc_pattern.finditer(text):
-            violations.append(self._create_violation(
-                text=text,
-                matched_text=match.group(0),
-                start=match.start(),
-                end=match.end(),
-                message="Use 'ad hoc' without periods",
-                suggested_fix="ad hoc"
-            ))
+        for term, description in latin_terms:
+            # 1. Check for version WITH periods (always wrong)
+            escaped_term = re.escape(term)
+            period_pattern = escaped_term.replace(r'\ ', r'\.?\s*') + r'\.?'
+            period_regex = re.compile(rf'\b{period_pattern}\b', re.IGNORECASE)
+            
+            for match in period_regex.finditer(text):
+                matched_text = match.group(0)
+                
+                # If it has periods, flag it
+                if '.' in matched_text:
+                    violations.append(self._create_violation(
+                        text=text,
+                        matched_text=matched_text,
+                        start=match.start(),
+                        end=match.end(),
+                        message=f"Latin term '{term}' should not have periods and should be italicized",
+                        suggested_fix=f"<i>{term}</i>"
+                    ))
+            
+            # 2. Check for non-italicized version (without periods)
+            plain_pattern = re.compile(rf'\b{escaped_term}\b', re.IGNORECASE)
+            
+            for match in plain_pattern.finditer(text):
+                # Check if this is inside italic tags
+                if not self._is_inside_italic(text, match.start(), match.end()):
+                    violations.append(self._create_violation(
+                        text=text,
+                        matched_text=match.group(0),
+                        start=match.start(),
+                        end=match.end(),
+                        message=f"Latin term should be italicized: <i>{term}</i>",
+                        suggested_fix=f"<i>{term}</i>"
+                    ))
 
         return violations
+
+    def _is_inside_italic(self, text: str, start: int, end: int) -> bool:
+        """Check if a position is inside italic tags."""
+        # Look backwards for opening tag
+        before = text[:start]
+        after = text[end:]
+        
+        # Find the last opening italic tag before this position
+        open_i = before.rfind('<i>')
+        open_em = before.rfind('<em>')
+        last_open = max(open_i, open_em)
+        
+        if last_open == -1:
+            return False
+        
+        # Find the closing tag after the opening
+        close_i = before.rfind('</i>')
+        close_em = before.rfind('</em>')
+        last_close = max(close_i, close_em)
+        
+        # If the last opening is after the last closing, we're inside italic
+        if last_open > last_close:
+            # Verify there's a closing tag after our position
+            close_after_i = after.find('</i>')
+            close_after_em = after.find('</em>')
+            if close_after_i != -1 or close_after_em != -1:
+                return True
+        
+        return False
 
     def _check_title_abbreviations(self, text: str) -> List[Violation]:
         """Check title abbreviation formats."""
@@ -213,3 +255,33 @@ class AbbreviationChecker(BaseChecker):
             ))
 
         return violations
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

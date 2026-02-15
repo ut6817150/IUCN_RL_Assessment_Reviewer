@@ -18,13 +18,30 @@ class FormattingChecker(BaseChecker):
     """Checker for formatting rules (italics for scientific names, et al., etc.)."""
 
     # Common taxonomic family suffixes (these should NOT be italicized)
-    FAMILY_SUFFIXES = [
-        'idae',   # Animals: Felidae, Canidae
-        'aceae',  # Plants: Rosaceae, Fabaceae
-        'ales',   # Orders: Rosales
-        'iformes', # Bird orders: Passeriformes
-        'oidea',  # Superfamilies
-    ]
+    FAMILY_SUFFIXES = {
+        'aceae',   # Plant families: Rosaceae, Orchidaceae
+        'idae',    # Animal families: Felidae, Canidae
+        'ales',    # Orders: Rosales, Asparagales
+        'ineae',   # Subtribes
+        'inae',    # Subfamilies
+        'eae',     # Tribes
+        'oideae',  # Subfamilies
+    }
+    
+    KNOWN_FAMILIES = {
+        # Major plant families
+        'Orchidaceae', 'Rubiaceae', 'Fabaceae', 'Asteraceae', 'Poaceae',
+        'Rosaceae', 'Euphorbiaceae', 'Lamiaceae', 'Malvaceae', 'Solanaceae',
+        'Brassicaceae', 'Apiaceae', 'Cactaceae', 'Acanthaceae', 'Araceae',
+        
+        # Major animal families
+        'Felidae', 'Canidae', 'Hominidae', 'Bovidae', 'Cervidae',
+        'Accipitridae', 'Columbidae', 'Psittacidae', 'Salamandridae',
+        
+        # Orders
+        'Rosales', 'Fabales', 'Asparagales', 'Lamiales', 'Solanales',
+        'Carnivora', 'Primates', 'Rodentia',
+    }
 
     # Higher taxonomy ranks that should NOT be italicized
     HIGHER_RANKS = [
@@ -40,6 +57,38 @@ class FormattingChecker(BaseChecker):
             severity=Severity.WARNING,
             assessment_section="Whole Document"
         )
+        self._html_processor = None
+
+    def set_html_processor(self, processor):
+        """Set the HTML processor for checking formatting."""
+        self._html_processor = processor
+
+    def _check_eoo_aoo_capitalization(self, text: str) -> List[Violation]:
+        """Check that EOO/AOO are lowercase when mid-sentence."""
+        violations = []
+    
+        # Terms to check
+        terms = {
+            'Extent of Occurrence': 'extent of occurrence',
+            'Area of Occupancy': 'area of occupancy',
+        }
+    
+        for incorrect, correct in terms.items():
+            # Pattern: Not at start of sentence (after lowercase letter + space)
+            pattern = re.compile(rf'(?<=[a-z]\s){re.escape(incorrect)}\b')
+        
+            for match in pattern.finditer(text):
+                violations.append(self._create_violation(
+                    text=text,
+                    matched_text=match.group(0),
+                    start=match.start(),
+                    end=match.end(),
+                    message=f"Use lowercase mid-sentence: '{correct}' not '{incorrect}'",
+                    suggested_fix=correct
+                ))
+    
+        return violations
+
 
     def check(self, text: str) -> List[Violation]:
         """Check for formatting violations."""
@@ -56,6 +105,12 @@ class FormattingChecker(BaseChecker):
 
         # Check that spp./sp. after genus are NOT italicized
         violations.extend(self._check_spp_not_italicized(text))
+        
+        #capitalisation
+        violations.extend(self._check_family_name_capitalization(text))
+
+        #AOO/EOO capitalisation
+        violations.extend(self._check_eoo_aoo_capitalization(text))
 
         return violations
 
@@ -233,7 +288,52 @@ class FormattingChecker(BaseChecker):
                     break
 
         return violations
+    
+    def _check_family_name_capitalization(self, text: str) -> List[Violation]:
+        """Check that family/higher taxonomy names are properly capitalized."""
+        violations = []
 
+        # Pattern: find words ending in family suffixes
+        suffix_pattern = '|'.join(re.escape(s) for s in self.FAMILY_SUFFIXES)
+        pattern = rf'\b([a-z][a-z]+)({suffix_pattern})\b'
+
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            full_name = match.group(0)
+            stem = match.group(1)
+            suffix = match.group(2)
+    
+            # Check if it's lowercase (incorrect)
+            if full_name[0].islower():
+                proper_name = stem.capitalize() + suffix
+            
+                # Only flag if it's a known family or clearly looks like one
+                if proper_name in self.KNOWN_FAMILIES or len(stem) >= 4:
+                    violations.append(self._create_violation(
+                        text=text,
+                        matched_text=full_name,
+                        start=match.start(),
+                        end=match.end(),
+                        message=f"Family/taxonomy names should be capitalized: '{proper_name}'",
+                        suggested_fix=proper_name
+                    ))
+
+        # Check for italicized family names (should NOT be italicized)
+        italic_pattern = rf'<(?:i|em)>([A-Z][a-z]+(?:{suffix_pattern}))</(?:i|em)>'
+
+        for match in re.finditer(italic_pattern, text):
+            family_name = match.group(1)
+    
+            violations.append(self._create_violation(
+                text=text,
+                matched_text=match.group(0),
+                start=match.start(),
+                end=match.end(),
+                message=f"Family names should NOT be italicized: '{family_name}'",
+                suggested_fix=family_name
+            ))
+
+        return violations
+    
     def _check_spp_not_italicized(self, text: str) -> List[Violation]:
         """Check that spp./sp. after genus are NOT italicized (only genus is)."""
         violations = []
@@ -258,6 +358,11 @@ class FormattingChecker(BaseChecker):
 
     def _is_inside_italic(self, text: str, start: int, end: int) -> bool:
         """Check if a position is inside italic tags."""
+
+        # Use HTML processor if available
+        if self._html_processor:
+            return self._html_processor.is_italicized(start, end)
+
         # Look backwards for opening tag
         before = text[:start]
         after = text[end:]

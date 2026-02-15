@@ -84,6 +84,13 @@ Examples:
         action='store_true',
         help='Skip formatting checks that require HTML tags (use when input is plain text, not HTML)'
     )
+    
+    parser.add_argument(
+        '--input-type',
+        choices=['text', 'html', 'auto'],
+        default='auto',
+        help='Input format (default: auto-detect)'
+    )
 
     args = parser.parse_args()
 
@@ -133,10 +140,10 @@ Examples:
 
     # Create checker and run
     checker = IUCNRuleChecker(
-        enabled_categories=enabled_categories,
-        min_severity=min_severity
+        enabled_categories=args.categories,
+        min_severity=severity_map.get(args.severity) if args.severity else None
     )
-
+    
     report = checker.check(text)
 
     # Output results

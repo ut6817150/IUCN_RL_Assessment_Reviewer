@@ -21,6 +21,7 @@ iucn_rules_checker.egg-info/top_level.txt
 tests/test_checkers.py
 tests/test_cli.py
 tests/test_edge_cases.py
+tests/test_family_names.py
 tests/test_formatting.py
 tests/test_integration.py
 tests/test_numbers.py

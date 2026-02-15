@@ -44,6 +44,8 @@ from .checkers import (
     GeographyChecker,
     ScientificNameChecker,
     ReferenceChecker,
+    FormattingChecker, 
+    LanguageChecker
 )
 
 __version__ = "1.0.0"
