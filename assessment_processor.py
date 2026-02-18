@@ -149,6 +149,167 @@ class AssessmentParser:
             rows.append(out_row)
         return rows
 
+    def _empty_style_bucket(self) -> Dict[str, List[str]]:
+        return {"bold": [], "italic": []}
+
+    def _merge_style_bucket(self, target: Dict[str, List[str]], src: Dict[str, List[str]]) -> None:
+        # preserve order, avoid duplicates
+        for k, vals in src.items():
+            if k not in target:
+                target[k] = []
+            for v in vals:
+                v = (v or "").strip()
+                if v and v not in target[k]:
+                    target[k].append(v)
+
+    def _extract_styles_from_docx_paragraph(self, p: Paragraph) -> Dict[str, List[str]]:
+        """
+        Extract formatted snippets from a DOCX paragraph using effective formatting:
+        - run.bold/italic/underline when explicitly set
+        - otherwise inherit from run.style.font then paragraph style
+
+        Also merges contiguous runs with the same formatting so multi-run phrases
+        become ONE string.
+        """
+        out = self._empty_style_bucket()
+
+        def tri_to_bool(x):
+            # x can be True/False/None in python-docx
+            return None if x is None else bool(x)
+
+        def eff(prop_name: str, run) -> bool:
+            # 1) direct run property
+            direct = tri_to_bool(getattr(run, prop_name))
+            if direct is not None:
+                return direct
+
+            # 2) run character style
+            try:
+                if run.style and run.style.font:
+                    v = tri_to_bool(getattr(run.style.font, prop_name))
+                    if v is not None:
+                        return v
+            except Exception:
+                pass
+
+            # 3) paragraph style
+            try:
+                if p.style and p.style.font:
+                    v = tri_to_bool(getattr(p.style.font, prop_name))
+                    if v is not None:
+                        return v
+            except Exception:
+                pass
+
+            return False
+
+        def flush(flags, buf):
+            txt = "".join(buf).replace("\xa0", " ").strip()
+            if not txt:
+                return
+            bold, italic = flags
+            if bold:
+                out["bold"].append(txt)
+            if italic:
+                out["italic"].append(txt)
+
+        cur_flags = None
+        buf: List[str] = []
+
+        for run in getattr(p, "runs", []):
+            t = run.text  # IMPORTANT: don’t strip per-run (keeps spaces/punctuation joining correctly)
+            if not t:
+                continue
+
+            flags = (eff("bold", run), eff("italic", run))
+
+            if cur_flags is None:
+                cur_flags = flags
+
+            if flags != cur_flags:
+                flush(cur_flags, buf)
+                buf = []
+                cur_flags = flags
+
+            buf.append(t)
+
+        if cur_flags is not None:
+            flush(cur_flags, buf)
+
+        # hyperlinks (your XML approach kept)
+        try:
+            for hl in p._p.findall(".//w:hyperlink", self.NS):
+                texts = [t.text for t in hl.findall(".//w:t", self.NS) if t.text]
+                chunk = "".join(texts).replace("\xa0", " ").strip()
+                if chunk:
+                    out["hyperlink"].append(chunk)
+        except Exception:
+            pass
+
+        deduped = self._empty_style_bucket()
+        self._merge_style_bucket(deduped, out)
+        return deduped
+
+
+    def _extract_styles_from_html_element(self, el, bold_classes: set[str] | None = None, italic_classes: set[str] | None = None) -> Dict[str, List[str]]:
+        """
+        Extract formatted snippets from an HTML element using tags + inline style.
+        Looks for: strong/b, em/i, u, a, code/pre, and inline styles like font-weight, font-style.
+        """
+        bold_classes = set(bold_classes or [])
+        italic_classes = set(italic_classes or [])
+
+        out = self._empty_style_bucket()
+
+        def clean(s: str) -> str:
+            return " ".join((s or "").split())
+
+        # Tag-based
+        for tag in el.find_all(["strong", "b"]):
+            t = clean(tag.get_text(" ", strip=True))
+            if t:
+                out["bold"].append(t)
+
+        for tag in el.find_all(["em", "i"]):
+            t = clean(tag.get_text(" ", strip=True))
+            if t:
+                out["italic"].append(t)
+
+        # Class-based (common in SIS HTML: <span class="dataLabel">...</span>)
+        BOLD_CLASSES = {"dataLabel"}   # you can add more later
+        ITALIC_CLASSES = set()         # if you later discover any italic classes
+
+        for tag in el.find_all(True):
+            classes = set(tag.get("class") or [])
+            if not classes:
+                continue
+
+            t = clean(tag.get_text(" ", strip=True))
+            if not t:
+                continue
+
+            if classes & BOLD_CLASSES:
+                out["bold"].append(t)
+            if classes & ITALIC_CLASSES:
+                out["italic"].append(t)
+
+        # Inline style-based (covers spans like <span style="font-weight:700">)
+        for tag in el.find_all(True):
+            style = (tag.get("style") or "").lower()
+            if not style:
+                continue
+            t = clean(tag.get_text(" ", strip=True))
+            if not t:
+                continue
+
+            if "font-weight" in style and ("bold" in style or "700" in style or "800" in style or "900" in style):
+                out["bold"].append(t)
+            if "font-style" in style and "italic" in style:
+                out["italic"].append(t)
+
+        deduped = self._empty_style_bucket()
+        self._merge_style_bucket(deduped, out)
+        return deduped
 
     # Header builder:
     def _build_heading_skeleton(self, doc: _Document, doc_title: str) -> HeadingNode:
@@ -202,6 +363,11 @@ class AssessmentParser:
             if current_h1 is not None:
                 return current_h1
             return root
+        
+        def style_bucket_for(node: HeadingNode) -> Dict[str, List[str]]:
+            if not hasattr(node, "_style_bucket"):
+                setattr(node, "_style_bucket", self._empty_style_bucket())
+            return getattr(node, "_style_bucket")
 
         def set_heading(title: str, lvl: int) -> None:
             nonlocal current_h1, current_h2
@@ -263,6 +429,9 @@ class AssessmentParser:
                 if not text:
                     continue
 
+                self._merge_style_bucket(style_bucket_for(container()), self._extract_styles_from_docx_paragraph(item))
+
+
                 if self._is_list_item(item):
                     sig = self._list_signature(item)
                     if pending_list is None or sig != pending_sig:
@@ -272,7 +441,7 @@ class AssessmentParser:
                     pending_list["items"].append({"text": text, "style": self._paragraph_style_name(item)})
                 else:
                     flush_list()
-                    container().blocks.append({"type": "paragraph", "text": text, "style": self._paragraph_style_name(item)})
+                    container().blocks.append({"type": "paragraph", "text": text})
 
             elif isinstance(item, Table):
                 flush_list()
@@ -280,6 +449,14 @@ class AssessmentParser:
 
         flush_list()
 
+        def add_style_block_if_any(node: HeadingNode) -> None:
+            bucket = getattr(node, "_style_bucket", None)
+            if bucket and any(bucket[k] for k in bucket):
+                node.blocks.append({"type": "style", "data": bucket})
+            for ch in node.children:
+                add_style_block_if_any(ch)
+
+        add_style_block_if_any(root)
 
     # Comment handling:
     def _read_comments_xml(self, docx_path: str) -> Dict[str, Dict[str, Any]]:
@@ -426,6 +603,24 @@ class AssessmentParser:
         html = Path(html_path).read_text(encoding="utf-8", errors="ignore")
         soup = BeautifulSoup(html, "html.parser")
 
+        # Discover class names that imply bold/italic from embedded CSS
+        css_text = ""
+        style_tag = soup.find("style")
+        if style_tag:
+            css_text = style_tag.get_text(" ", strip=True).lower()
+
+        bold_classes = set()
+        italic_classes = set()
+
+        # Very lightweight CSS parsing: .class { ... font-weight: bold ... }
+        import re
+        for m in re.finditer(r"\.(?P<cls>[a-z0-9_-]+)\s*\{[^}]*font-weight\s*:\s*bold", css_text):
+            bold_classes.add(m.group("cls"))
+
+        for m in re.finditer(r"\.(?P<cls>[a-z0-9_-]+)\s*\{[^}]*font-style\s*:\s*italic", css_text):
+            italic_classes.add(m.group("cls"))
+
+
         doc_title = Path(html_path).stem
         root = HeadingNode(title=doc_title, level=0, path=[], blocks=[], children=[])
 
@@ -434,6 +629,11 @@ class AssessmentParser:
 
         def container() -> HeadingNode:
             return current_h2 or current_h1 or root
+
+        def style_bucket_for(node: HeadingNode) -> Dict[str, List[str]]:
+            if not hasattr(node, "_style_bucket"):
+                setattr(node, "_style_bucket", self._empty_style_bucket())
+            return getattr(node, "_style_bucket")
 
         def set_heading(title: str, lvl: int) -> None:
             nonlocal current_h1, current_h2
@@ -474,13 +674,15 @@ class AssessmentParser:
             if name == "p":
                 text = clean_text(el)
                 if text:
-                    container().blocks.append({"type": "paragraph", "text": text, "style": "HTML:p"})
+                    self._merge_style_bucket(style_bucket_for(container()), self._extract_styles_from_html_element(el, bold_classes=bold_classes, italic_classes=italic_classes))
+                    container().blocks.append({"type": "paragraph", "text": text})
                 continue
 
             if name in ("ul", "ol"):
                 items = []
                 for li in el.find_all("li", recursive=False):
                     t = clean_text(li)
+                    self._merge_style_bucket(style_bucket_for(container()), self._extract_styles_from_html_element(li))
                     if t:
                         items.append({"text": t, "style": f"HTML:{name}/li"})
                 if items:
@@ -488,6 +690,7 @@ class AssessmentParser:
                 continue
 
             if name == "table":
+                self._merge_style_bucket(style_bucket_for(container()), self._extract_styles_from_html_element(el, bold_classes=bold_classes, italic_classes=italic_classes))
                 rows: List[List[str]] = []
                 for tr in el.find_all("tr"):
                     row = []
@@ -498,6 +701,15 @@ class AssessmentParser:
                 if rows:
                     container().blocks.append({"type": "table", "rows": rows})
                 continue
+
+        def add_style_block_if_any(node: HeadingNode) -> None:
+            bucket = getattr(node, "_style_bucket", None)
+            if bucket and any(bucket[k] for k in bucket):
+                node.blocks.append({"type": "style", "data": bucket})
+            for ch in node.children:
+                add_style_block_if_any(ch)
+
+        add_style_block_if_any(root)
 
         out = root.to_dict()
         out["comments"] = []  # no DOCX comment anchors in plain HTML
