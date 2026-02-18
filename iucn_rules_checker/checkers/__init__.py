@@ -1,5 +1,4 @@
 """IUCN rule checkers package."""
-
 from .base import BaseChecker, PatternChecker
 from .spelling import SpellingChecker
 from .numbers import NumberChecker
@@ -12,6 +11,7 @@ from .geography import GeographyChecker
 from .scientific import ScientificNameChecker
 from .references import ReferenceChecker
 from .formatting import FormattingChecker
+from .language import LanguageChecker
 
 __all__ = [
     'BaseChecker',
@@ -27,4 +27,5 @@ __all__ = [
     'ScientificNameChecker',
     'ReferenceChecker',
     'FormattingChecker',
+    'LanguageChecker',
 ]

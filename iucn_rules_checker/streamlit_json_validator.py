@@ -19,7 +19,7 @@ class StreamlitAssessmentValidator:
         self.checked_rules = []
 
 
-    def validate(self, json_data: Dict[str, Any]) -> Tuple[ViolationReport, str]:
+    def validate(self, assessment: Dict[str, Any]) -> Tuple[ViolationReport, str]:
         """
         Validate assessment from Streamlit JSON.
         
@@ -32,7 +32,7 @@ class StreamlitAssessmentValidator:
         self.metadata = {}
         
         # Parse the hierarchical structure
-        self._parse_document(json_data)
+        self._parse_document(assessment)
         
         # Extract metadata from parsed content
         self._extract_metadata()
@@ -450,7 +450,7 @@ class StreamlitAssessmentValidator:
             explanation_terms = [
                 'sampling', 'sample', 'uncertainty', 'uncertain',
                 'disjunct', 'patchy', 'fragmented', 'isolated',
-                poorly known', 'under-recorded', 'sparse'
+                'poorly known', 'under-recorded', 'sparse'
             ]
         
             has_explanation = any(term in rationale.lower() for term in explanation_terms)

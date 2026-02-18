@@ -45,7 +45,7 @@ from .checkers import (
     ScientificNameChecker,
     ReferenceChecker,
     FormattingChecker, 
-    LanguageChecker
+    LanguageChecker,
 )
 
 __version__ = "1.0.0"
@@ -76,4 +76,6 @@ __all__ = [
     'GeographyChecker',
     'ScientificNameChecker',
     'ReferenceChecker',
+    'FormattingChecker',
+    'LanguageChecker',
 ]

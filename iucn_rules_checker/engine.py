@@ -17,6 +17,7 @@ from checkers import (
     ScientificNameChecker,
     ReferenceChecker,
     FormattingChecker,
+    LanguageChecker
 )
 
 
@@ -69,6 +70,7 @@ class IUCNRuleChecker:
             ScientificNameChecker(),
             ReferenceChecker(),
             FormattingChecker(),
+            LanguageChecker(),
         ]
 
     def get_available_categories(self) -> Set[str]:
