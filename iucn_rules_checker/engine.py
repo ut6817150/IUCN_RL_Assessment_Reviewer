@@ -179,7 +179,7 @@ class IUCNRuleChecker:
     ) -> ViolationReport:
         """Build the final violation report."""
 
-    # Count by severity (must use Severity enum as keys)
+        # Count by severity (must use Severity enum as keys)
         by_severity: Dict[Severity, int] = {}
         for v in violations:
             if v.severity not in by_severity:
