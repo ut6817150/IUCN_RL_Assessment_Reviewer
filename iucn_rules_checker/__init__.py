@@ -20,7 +20,7 @@ Usage:
         print(f"Line {violation.position.line}: {violation.message}")
 """
 
-from models import (
+from .models import (
     Violation,
     ViolationReport,
     TextPosition,

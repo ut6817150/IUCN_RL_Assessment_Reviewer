@@ -1,10 +1,10 @@
 """Main IUCN rule checker engine."""
 
 from typing import List, Optional, Set, Dict
-from streamlit_json_validator import StreamlitAssessmentValidator
+from .streamlit_json_validator import StreamlitAssessmentValidator
 
-from models import Violation, ViolationReport, Severity
-from checkers import (
+from .models import Violation, ViolationReport, Severity
+from .checkers import (
     BaseChecker,
     SpellingChecker,
     NumberChecker,
@@ -96,32 +96,38 @@ class IUCNRuleChecker:
         all_violations.extend(json_report.violations)
         checked_rules.extend(json_report.checked_rules)
         
-        # 2. Run text-based checkers on extracted text
-        for checker in self._checkers:
-            # Check if this category is enabled
-            if self.enabled_categories and checker.category not in self.enabled_categories:
-                skipped_rules.append(checker.rule_id)
+        #2. Run text checkers per section so assessment section gets stamped
+        sections = self.json_validator.sections
+
+        for section_name, section_text in sections.items():
+            if not section_text.strip():
                 continue
+
+            for checker in self._checkers:
+                if self.enabled_categories and checker.category not in self.enabled_categories:
+                    skipped_rules.append(checker.rule_id)
+                    continue
             
-            # Check if this rule is disabled
-            if checker.rule_id in self.disabled_rules:
-                skipped_rules.append(checker.rule_id)
-                continue
+                # Check if this rule is disabled
+                if checker.rule_id in self.disabled_rules:
+                    skipped_rules.append(checker.rule_id)
+                    continue
             
-            # Run the checker
-            checked_rules.append(checker.rule_id)
-            text_violations = checker.check(full_text)
+                # Run the checker
+                checked_rules.append(checker.rule_id)
+                text_violations = checker.check(section_text)
             
-            # Filter by severity
-            for v in text_violations:
-                if self._severity_value(v.severity) >= self._severity_value(self.min_severity):
-                    all_violations.append(v)
+                # Filter by severity
+                for v in text_violations:
+                    if self._severity_value(v.severity) >= self._severity_value(self.min_severity):
+                        v.assessment_section = section_name
+                        all_violations.append(v)
         
         return self._build_report(
             text=full_text,
             violations=all_violations,
-            checked_rules=checked_rules,
-            skipped_rules=skipped_rules
+            checked_rules=list(set(checked_rules)),
+            skipped_rules=list(set(skipped_rules))
         )
 
 

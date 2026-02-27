@@ -3,8 +3,8 @@
 import re
 from typing import List
 
-from checkers.base import BaseChecker
-from models import Violation, Severity
+from .base import BaseChecker
+from ..models import Violation, Severity
 
 
 class LanguageChecker(BaseChecker):

@@ -6,7 +6,7 @@ which has a hierarchical structure with sections as 'children' and content in 'b
 
 from typing import List, Dict, Any, Tuple
 import re
-from models import Violation, Severity, TextPosition, ViolationReport
+from .models import Violation, Severity, TextPosition, ViolationReport
 
 class StreamlitAssessmentValidator:
     """Validate IUCN assessments from Streamlit JSON."""
