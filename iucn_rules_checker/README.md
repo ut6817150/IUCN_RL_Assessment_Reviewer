@@ -1,29 +1,36 @@
-# IUCN Checker
+# IUCN Rules Checker
 
 A Python-based linting tool that validates text against IUCN Red List assessment formatting, style, and terminology rules.
 
 ## Overview
 
-IUCN Checker enforces standardized conventions for scientific assessments, including UK spelling, number formatting, date conventions, IUCN-specific terminology, and more. It can be used as a command-line tool or imported as a Python library.
+IUCN Rules Checker enforces standardized conventions for scientific assessments, including UK spelling, number formatting, date conventions, IUCN-specific terminology, and more. It can be used as a command-line tool, imported as a Python library, or integrated with a Streamlit frontend via JSON input.
 
 ## Features
 
-- **11 specialized checkers** covering 50+ distinct rules
+- **12 specialized checkers** covering 50+ distinct rules
 - **Accurate position tracking** with line/column information for each violation
 - **Suggested fixes** for most violations
 - **Flexible filtering** by category, severity, or specific rules
 - **Multiple output formats** including JSON and pretty-printed summaries
-- **No external dependencies** - uses only Python standard library
+- **Dual input modes** - plain text or Streamlit hierarchical JSON
 - **Dual interface** - CLI tool and importable Python library
-- **Comprehensive test suite** - 22+ tests covering all major checkers
+- **Comprehensive test suite** covering all major checkers
 
 ## Installation
 
-No installation required beyond Python 3.7+. Clone the repository and run directly:
+Requires Python 3.7+. Clone the repository and run directly:
 
 ```bash
 git clone <repository-url>
-cd code
+cd iucn_rules_checker
+```
+
+### Dependencies
+
+```
+beautifulsoup4  # for HTML processing
+pytest>=7.0.0  # for running tests
 ```
 
 ### Development Setup (Recommended)
@@ -42,7 +49,7 @@ venv\Scripts\activate  # On Windows
 pip install -e .
 
 # Install testing dependencies
-pip install pytest pytest-cov
+pip install pytest pytest-cov beautifulsoup4
 ```
 
 
@@ -52,37 +59,37 @@ pip install pytest pytest-cov
 
 ```bash
 # Check a file
-python -m iucn_checker input.txt
+python -m iucn_rules_checker input.txt
 
 # Check from stdin
-echo "The color of the species is grey." | python -m iucn_checker
+echo "The color of the species is grey." | python -m iucn_rules_checker
 
 # Pretty-print violations
-python -m iucn_checker input.txt --pretty
+python -m iucn_rules_checker input.txt --pretty
 
 # Show summary only
-python -m iucn_checker input.txt --summary
+python -m iucn_rules_checker input.txt --summary
 
 # Output to JSON file
-python -m iucn_checker input.txt -o report.json
+python -m iucn_rules_checker input.txt -o report.json
 
 # Filter by categories
-python -m iucn_checker input.txt --categories Language Numbers
+python -m iucn_rules_checker input.txt --categories Language Numbers
 
 # Filter by minimum severity (error, warning, info)
-python -m iucn_checker input.txt --severity warning
+python -m iucn_rules_checker input.txt --severity warning
 
 # Check plain text (skip formatting checks that require HTML tags)
-python -m iucn_checker input.txt --plain-text
+python -m iucn_rules_checker input.txt --plain-text
 
 # List available categories
-python -m iucn_checker --list-categories
+python -m iucn_rules_checker --list-categories
 ```
 
 ### As a Python Library
 
 ```python
-from iucn_checker import IUCNRuleChecker, check_text, Severity
+from iucn_rules_checker import IUCNRuleChecker, check_text, Severity
 
 # Quick check
 report = check_text("Your assessment text here...")
@@ -102,9 +109,42 @@ for violation in report.violations:
         print(f"  Suggestion: {violation.suggested_fix}")
 ```
 
-## Testing
+### Checking Streamlit JSON Input
 
-The project includes a comprehensive test suite to ensure accuracy and reliability.
+The checker supports the hierarchical JSON format produced by the Streamlit frontend, where sections appear as `children` and text content lives in `blocks`:
+
+```python
+import json
+from iucn_rules_checker import IUCNRuleChecker
+
+with open('assessment.json', 'r') as f:
+    assessment_json = json.load(f)
+
+checker = IUCNRuleChecker()
+report = checker.check_json(assessment_json)
+
+print(f"Total violations: {report.total_violations}")
+for violation in report.violations:
+    print(f"[{violation.severity.value.upper()}] {violation.message}")
+```
+
+You can also use the standalone script for quick inspection:
+
+```bash
+python show_json_violations.py assessment.json
+```
+
+### Demo and Examples
+
+```bash
+# Run the quick demo
+python demo.py
+
+# See full usage examples including JSON workflow
+python usage_examples.py
+```
+
+## Testing
 
 ### Running Tests
 ```bash
@@ -121,31 +161,20 @@ python -m pytest tests/ --cov=checkers --cov-report=html
 python -m pytest tests/ -v -s
 ```
 
-### Test Coverage
-
-The test suite includes:
-- **Unit tests** for individual checkers (formatting, numbers, punctuation, spelling)
-- **Integration tests** for the complete checking pipeline
-- **Edge case tests** for unusual inputs and performance
-- **CLI tests** for command-line interface functionality
-
-Current test metrics:
-- **22+ comprehensive tests**
-- **Coverage of all major rule categories**
-- **Validation of suggested fixes**
-- **False positive detection and prevention**
-
 ### Test Structure
 ```
 tests/
 ├── conftest.py              # Shared fixtures
+├── test_checkers.py         # General checker tests
 ├── test_formatting.py       # Scientific name and italics tests
 ├── test_numbers.py          # Number formatting tests
 ├── test_punctuation.py      # En-dash and punctuation tests
 ├── test_spelling.py         # UK/US spelling tests
 ├── test_integration.py      # End-to-end tests
 ├── test_edge_cases.py       # Edge cases and performance
-└── test_cli.py              # Command-line interface tests
+├── test_cli.py              # Command-line interface tests
+├── test_family_names.py     # Taxonomic family name tests
+└── test_new_rules.py        # Tests for recently added rules
 ```
 
 ## Categories
@@ -154,7 +183,8 @@ The checker includes the following rule categories:
 
 | Category | Description |
 |----------|-------------|
-| **Language** | UK spelling enforcement (colour, centre, grey, -ise endings) |
+| **Language** | Language and style issues (passive voice, vague wording) |
+| **Spelling** | UK spelling enforcement (colour, centre, grey, -ise endings) |
 | **Numbers** | Number formatting (1-9 as words, commas for thousands) |
 | **Dates** | Date conventions (no ordinals, numeric centuries) |
 | **Abbreviations** | Abbreviation rules (et al., etc., Latin terms) |
@@ -221,11 +251,12 @@ When used as a CLI tool:
 ## Project Structure
 
 ```
-code/
+iucn_rules_checker/
 ├── checkers/
 │   ├── __init__.py          # Package exports
 │   ├── base.py              # Abstract base classes
 │   ├── spelling.py          # UK spelling rules
+│   ├── language.py          # Language and style rules
 │   ├── numbers.py           # Number formatting
 │   ├── dates.py             # Date formatting
 │   ├── abbreviations.py     # Abbreviation rules
@@ -235,22 +266,31 @@ code/
 │   ├── geography.py         # Geographic naming
 │   ├── scientific.py        # Scientific names
 │   ├── references.py        # Citation formatting
-│   └── formatting.py        # Text formatting
+│   └── formatting.py        # Text formatting (requires HTML input)
 ├── tests/                   # Comprehensive test suite
 │   ├── conftest.py
+│   ├── test_checkers.py
 │   ├── test_formatting.py
 │   ├── test_numbers.py
 │   ├── test_punctuation.py
 │   ├── test_spelling.py
 │   ├── test_integration.py
 │   ├── test_edge_cases.py
-│   └── test_cli.py
+│   ├── test_cli.py
+│   ├── test_family_names.py
+│   └── test_new_rules.py
 ├── engine.py                # Core checking orchestration
-├── models.py                # Data models (Violation, Report)
+├── models.py                # Data models (Violation, Report, Severity)
+├── html_processor.py        # HTML parsing utilities (uses BeautifulSoup)
+├── streamlit_json_validator.py  # Validator for Streamlit JSON format
 ├── main.py                  # CLI entry point
+├── __main__.py              # Allows `python -m iucn_rules_checker`
+├── __init__.py              # Public API exports
+├── demo.py                  # Quick demo script
+├── usage_examples.py        # Extended usage examples
+├── show_json_violations.py  # CLI script for JSON violation inspection
 ├── setup.py                 # Package configuration
-├── IUCN_Assessment_Rules.json
-└── IUCN_Assessment_Rules.xlsx
+└── sample.json              # Example Streamlit JSON assessment
 ```
 
 ## Examples
@@ -258,7 +298,7 @@ code/
 ### Checking an Assessment
 
 ```bash
-python -m iucn_checker assessment.txt --pretty
+python -m iucn_rules_checker assessment.txt --pretty
 ```
 
 Sample output:
@@ -292,7 +332,7 @@ Violations Found: 3
 
 ```bash
 # Exit with non-zero status if errors found
-python -m iucn_checker assessment.txt --severity error
+python -m iucn_rules_checker assessment.txt --severity error
 if [ $? -eq 2 ]; then
     echo "Assessment contains errors"
     exit 1
@@ -302,8 +342,8 @@ fi
 ## Requirements
 
 - Python 3.7 or higher
-- No external dependencies
-- pytest 7.0+ (for running tests)
+- `beautifulsoup4` (for HTML processing)
+- `pytest 7.0+` (for running tests)
 
 ## License
 
