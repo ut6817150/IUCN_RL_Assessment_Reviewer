@@ -183,7 +183,7 @@ The checker includes the following rule categories:
 
 | Category | Description |
 |----------|-------------|
-| **Language** | Language and style issues (passive voice, vague wording) |
+| **Language** | Sentence fragment detection (incomplete or very short sentences) |
 | **Spelling** | UK spelling enforcement (colour, centre, grey, -ise endings) |
 | **Numbers** | Number formatting (1-9 as words, commas for thousands) |
 | **Dates** | Date conventions (no ordinals, numeric centuries) |
@@ -338,6 +338,118 @@ if [ $? -eq 2 ]; then
     exit 1
 fi
 ```
+
+## Contributing / Adding New Rules
+
+### How the codebase is structured
+
+The engine ([engine.py](engine.py)) instantiates all checkers and runs them against the input text. Each checker lives in [checkers/](checkers/) and inherits from `BaseChecker`. The results are returned as a `ViolationReport` containing a list of `Violation` objects (defined in [models.py](models.py)).
+
+```
+Input text / JSON
+      │
+      ▼
+ engine.py  ──►  [SpellingChecker, NumberChecker, ...]  ──►  ViolationReport
+      │
+      ▼  (JSON input)
+ streamlit_json_validator.py  ──►  extracts text per section  ──►  engine.py
+```
+
+### Severity levels
+
+| Level | When to use |
+|-------|-------------|
+| `Severity.ERROR` | Clear rule violation that must be fixed (e.g. wrong country name) |
+| `Severity.WARNING` | Strong preference / likely mistake (e.g. US spelling) |
+| `Severity.INFO` | Style suggestion or ambiguous case |
+
+### Adding a rule to an existing checker
+
+Open the relevant file in [checkers/](checkers/) and add a new pattern or condition inside the `check()` method. Use `self._create_violation()` to build the violation:
+
+```python
+violations.append(self._create_violation(
+    text=text,
+    matched_text=match.group(0),
+    start=match.start(),
+    end=match.end(),
+    message="Describe the problem here",
+    suggested_fix="corrected text"  # optional
+))
+```
+
+Then add a test for it in the corresponding file under [tests/](tests/).
+
+### Adding a new checker
+
+**Step 1** — create `checkers/mychecker.py` subclassing `BaseChecker`:
+
+```python
+from .base import BaseChecker
+from ..models import Violation, Severity
+
+class MyChecker(BaseChecker):
+    def __init__(self):
+        super().__init__(
+            rule_id="my_rule",
+            rule_name="My rule name",
+            category="MyCategory",       # shows up in --list-categories
+            severity=Severity.WARNING,
+            assessment_section="Whole Document"  # or a specific section name
+        )
+
+    def check(self, text: str) -> list[Violation]:
+        violations = []
+        # ... your logic here ...
+        return violations
+```
+
+**Step 2** — export it from [checkers/\_\_init\_\_.py](checkers/__init__.py):
+
+```python
+from .mychecker import MyChecker
+```
+
+**Step 3** — register it in [engine.py](engine.py) inside `_create_checkers()`:
+
+```python
+def _create_checkers(self):
+    return [
+        ...
+        MyChecker(),
+    ]
+```
+
+**Step 4** — add tests in `tests/test_mychecker.py` and run:
+
+```bash
+python -m pytest tests/test_mychecker.py -v
+```
+
+### Using `PatternChecker` for simple regex rules
+
+If your rule is just a regex pattern → suggested fix, use the built-in `PatternChecker` instead of writing a full class:
+
+```python
+from .base import PatternChecker
+from ..models import Severity
+
+checker = PatternChecker(
+    rule_id="my_pattern_rule",
+    rule_name="My pattern rule",
+    category="MyCategory",
+    pattern=r'\bsome pattern\b',
+    message_template="Found '{matched}' — use 'correct form' instead",
+    fix_map={"some pattern": "correct form"},
+    severity=Severity.WARNING
+)
+```
+
+### Branch workflow
+
+- Work on feature branches off `rules-checker`
+- `rules-checker` merges into `main`
+- Run the full test suite before opening a PR: `python -m pytest tests/ -v`
 
 ## Requirements
 
