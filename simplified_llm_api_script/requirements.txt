@@ -1,0 +1,4 @@
+anthropic
+python-frontmatter
+pydantic
+python-dotenv
