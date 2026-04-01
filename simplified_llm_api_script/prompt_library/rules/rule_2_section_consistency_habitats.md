@@ -1,13 +1,13 @@
 ---
-scope: 'Habitats and Ecology'
+scope: 'relevant_section: Habitats and Ecology, Red List Assessment'
 severity: 'high'
 category: 'section_consistency'
 ---
 
-# Habitats Consistency
+# Habitats Consistency 
 Ensure that the Habitats section follows the below specifications and is overall consistent in the information that is presented.
 
-## Section Content Requirements: Threats
+## Section Content Requirements: Threats [Red List Standards Consistency (Section 2.2.6)]
 A summary of the taxon’s suitable habitats and ecological requirements is required supporting
 information for all taxa that are not assessed as Least Concern (Table 2). In SIS, this is recorded in
 the Habitats & ecology information field. This summary should include information on the essential
