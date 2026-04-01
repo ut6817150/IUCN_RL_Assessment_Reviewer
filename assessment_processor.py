@@ -22,6 +22,7 @@ import json
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
+from html import escape
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
@@ -149,8 +150,92 @@ class AssessmentParser:
             rows.append(out_row)
         return rows
 
+    def _table_to_rows_rich(self, tbl: Table) -> List[List[str]]:
+        """Extract table into 2D list of cell text preserving super/sub script markup."""
+        rows: List[List[str]] = []
+        for row in tbl.rows:
+            out_row: List[str] = []
+            for cell in row.cells:
+                text = "\n".join(
+                    [
+                        rich_text
+                        for p in cell.paragraphs
+                        if (rich_text := self._paragraph_text_with_scripts(p)).strip()
+                    ]
+                )
+                out_row.append(text)
+            rows.append(out_row)
+        return rows
+
     def _empty_style_bucket(self) -> Dict[str, List[str]]:
         return {"bold": [], "italic": []}
+
+    def _run_vertical_align(self, run) -> Optional[str]:
+        """
+        Return 'superscript', 'subscript', or None for a run.
+
+        Prefer python-docx properties when available, then fall back to the raw
+        WordprocessingML vertAlign value.
+        """
+        try:
+            if run.font.superscript is True:
+                return "superscript"
+            if run.font.subscript is True:
+                return "subscript"
+        except Exception:
+            pass
+
+        try:
+            vert = run._r.find(".//w:vertAlign", self.NS)
+            if vert is not None:
+                val = vert.get(f"{{{self.W_NS}}}val")
+                if val == "superscript":
+                    return "superscript"
+                if val == "subscript":
+                    return "subscript"
+        except Exception:
+            pass
+
+        return None
+
+    def _paragraph_text_with_scripts(self, p: Paragraph) -> str:
+        """
+        Return paragraph text while preserving superscript/subscript using inline
+        HTML-like markup, e.g. km<sup>2</sup> or CO<sub>2</sub>.
+        """
+        parts: List[str] = []
+        for run in getattr(p, "runs", []):
+            if not run.text:
+                continue
+
+            text = escape(run.text, quote=False)
+            vert = self._run_vertical_align(run)
+            if vert == "superscript":
+                parts.append(f"<sup>{text}</sup>")
+            elif vert == "subscript":
+                parts.append(f"<sub>{text}</sub>")
+            else:
+                parts.append(text)
+
+        return "".join(parts).strip()
+
+    def _xml_run_text_with_scripts(self, run_el: ET.Element) -> str:
+        """Render a raw WordprocessingML <w:r> element with super/sub script markup."""
+        texts = [t.text for t in run_el.findall(".//w:t", self.NS) if t.text]
+        if not texts:
+            return ""
+
+        text = escape("".join(texts), quote=False)
+        vert = run_el.find(".//w:vertAlign", self.NS)
+        if vert is None:
+            return text
+
+        val = vert.get(f"{{{self.W_NS}}}val")
+        if val == "superscript":
+            return f"<sup>{text}</sup>"
+        if val == "subscript":
+            return f"<sub>{text}</sub>"
+        return text
 
     def _merge_style_bucket(self, target: Dict[str, List[str]], src: Dict[str, List[str]]) -> None:
         # preserve order, avoid duplicates
@@ -344,7 +429,7 @@ class AssessmentParser:
             if isinstance(item, Paragraph):
                 lvl = self._heading_level(item)
                 if lvl in (1, 2):
-                    add_heading(item.text, lvl)
+                    add_heading((item.text or "").strip(), lvl)
 
         return root
 
@@ -426,6 +511,7 @@ class AssessmentParser:
                     continue
 
                 text = (item.text or "").strip()
+                rich_text = self._paragraph_text_with_scripts(item)
                 if not text:
                     continue
 
@@ -438,14 +524,26 @@ class AssessmentParser:
                         flush_list()
                         pending_list = {"type": "list", "signature": sig, "items": []}
                         pending_sig = sig
-                    pending_list["items"].append({"text": text, "style": self._paragraph_style_name(item)})
+                    pending_list["items"].append(
+                        {
+                            "text": text,
+                            "text_rich": rich_text,
+                            "style": self._paragraph_style_name(item),
+                        }
+                    )
                 else:
                     flush_list()
-                    container().blocks.append({"type": "paragraph", "text": text})
+                    container().blocks.append({"type": "paragraph", "text": text, "text_rich": rich_text})
 
             elif isinstance(item, Table):
                 flush_list()
-                container().blocks.append({"type": "table", "rows": self._table_to_rows(item)})
+                container().blocks.append(
+                    {
+                        "type": "table",
+                        "rows": self._table_to_rows(item),
+                        "rows_rich": self._table_to_rows_rich(item),
+                    }
+                )
 
         flush_list()
 
@@ -498,7 +596,13 @@ class AssessmentParser:
 
         current_path: List[str] = []
         acc: Dict[str, Dict[str, Any]] = {
-            cid: {"anchor_heading_path": [], "anchor_text_parts": [], "anchor_context_parts": []}
+            cid: {
+                "anchor_heading_path": [],
+                "anchor_text_parts": [],
+                "anchor_text_rich_parts": [],
+                "anchor_context_parts": [],
+                "anchor_context_rich_parts": [],
+            }
             for cid in comment_meta.keys()
         }
 
@@ -556,11 +660,13 @@ class AssessmentParser:
                 elif tag == f"{{{self.W_NS}}}r":
                     texts = [t.text for t in child.findall(".//w:t", self.NS) if t.text]
                     chunk = "".join(texts)
+                    chunk_rich = self._xml_run_text_with_scripts(child)
                     if chunk:
                         for cid in active_stack:
                             if cid in acc:
                                 ensure_heading(cid)
                                 acc[cid]["anchor_text_parts"].append(chunk)
+                                acc[cid]["anchor_text_rich_parts"].append(chunk_rich or escape(chunk, quote=False))
                                 paragraph_touched.add(cid)
 
             # paragraph-level context
@@ -569,6 +675,13 @@ class AssessmentParser:
                 for cid in (paragraph_touched | set(active_stack)):
                     if cid in acc and len(acc[cid]["anchor_context_parts"]) < 6:
                         acc[cid]["anchor_context_parts"].append(ptxt)
+
+            ptxt_rich = self._paragraph_text_with_scripts(p)
+            if ptxt_rich:
+                for cid in (paragraph_touched | set(active_stack)):
+                    if cid in acc:
+                        if len(acc[cid]["anchor_context_rich_parts"]) < 6:
+                            acc[cid]["anchor_context_rich_parts"].append(ptxt_rich)
 
         for item in self._iter_block_items_in_order(doc):
             if isinstance(item, Paragraph):
@@ -586,7 +699,9 @@ class AssessmentParser:
                     **meta,
                     "anchor_heading_path": acc[cid]["anchor_heading_path"],
                     "anchor_text": "".join(acc[cid]["anchor_text_parts"]).strip(),
+                    "anchor_text_rich": "".join(acc[cid]["anchor_text_rich_parts"]).strip(),
                     "anchor_context": " ".join(acc[cid]["anchor_context_parts"]).strip(),
+                    "anchor_context_rich": " ".join(acc[cid]["anchor_context_rich_parts"]).strip(),
                 }
             )
         return out
