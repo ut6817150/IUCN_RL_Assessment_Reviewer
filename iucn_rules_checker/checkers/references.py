@@ -3,108 +3,115 @@
 import re
 from typing import List
 
+from ..violation import Violation
 from .base import BaseChecker
-from ..models import Violation, Severity
 
 
 class ReferenceChecker(BaseChecker):
     """Checker for citation and reference formatting rules."""
 
     def __init__(self):
-        super().__init__(
-            rule_id="references_format",
-            rule_name="Reference formatting rules",
-            category="References",
-            severity=Severity.WARNING,
-            assessment_section="Bibliography"
-        )
+        super().__init__()
 
-    def check(self, text: str) -> List[Violation]:
+    def check_text(self, section_name: str, text: str) -> List[Violation]:
         """Check for reference formatting violations."""
         violations = []
-
-        # & vs "and" in citations
-        violations.extend(self._check_ampersand_usage(text))
-
-        # et al. format
-        violations.extend(self._check_et_al_format(text))
-
-        # Author format (Smith 2020) vs (Smith, 2020)
-        violations.extend(self._check_citation_comma(text))
-
+        violations.extend(self.check_ampersand_usage(section_name, text))
+        violations.extend(self.check_citation_comma(section_name, text))
         return violations
 
-    def _check_ampersand_usage(self, text: str) -> List[Violation]:
-        """Check that 'and' is used instead of '&' for author names."""
-        violations = []
+    def check_ampersand_usage(self, section_name: str, text: str) -> List[Violation]:
+        """Flag every `&` in bibliography sections and suggest `and`.
 
-        # Pattern: "Author1 & Author2 (year)" or "(Author1 & Author2 year)"
-        ampersand_pattern = re.compile(
-            r'([A-Z][a-z]+)\s*&\s*([A-Z][a-z]+)\s*[\(\[]?\d{4}'
+        This rule only runs when `section_name` contains `Bibliography`
+        (case-insensitive). In those sections, every literal ampersand
+        character is flagged, regardless of surrounding words or reference
+        structure.
+
+        Examples flagged in bibliography sections:
+        `Smith & Jones 2020`
+        `Smith&Jones 2020`
+        `<i>Smith</i> <b>&</b> <i>Jones</i> 2020`
+
+        Examples not flagged:
+        the same text in non-bibliography sections
+        `Smith and Jones 2020`
+
+        What it catches:
+        all literal `&` characters in bibliography text, including ones inside
+        simple bold or italic markup.
+
+        What it misses:
+        non-bibliography sections.
+        It does not infer that some other word or symbol should become `and`
+        unless an actual `&` character is present.
+        """
+        violations = []
+        if "bibliography" not in section_name.lower():
+            return violations
+
+        cleaned_text, index_map = self.strip_style_markers(
+            text,
+            italics=True,
+            bold=True,
+            superscript=True,
+            subscript=True,
         )
 
-        for match in ampersand_pattern.finditer(text):
-            author1, author2 = match.group(1), match.group(2)
-            violations.append(self._create_violation(
+        for match in re.finditer(r"&", cleaned_text):
+            original_start = index_map[match.start()]
+            original_end = index_map[match.end() - 1] + 1
+            violations.append(self.create_violation(
+                section_name=section_name,
                 text=text,
-                matched_text=match.group(0),
-                start=match.start(),
-                end=match.end(),
-                message=f"Use 'and' not '&' for author names: '{author1} and {author2}'",
-                suggested_fix=None  # Complex replacement
+                span=(original_start, original_end),
+                message="Use 'and' not '&' in bibliography author entries",
+                suggested_fix="and",
             ))
 
         return violations
 
-    def _check_et_al_format(self, text: str) -> List[Violation]:
-        """Check et al. formatting."""
+    def check_citation_comma(self, section_name: str, text: str) -> List[Violation]:
+        """Check for a comma immediately before the year in bracketed citations.
+
+        This rule now uses a broader citation shell rather than trying to infer
+        surname shape. It looks for:
+        - an opening `(`
+        - any non-nested citation body
+        - a comma before a 4-digit year
+        - a closing `)`
+
+        Examples flagged:
+        `(Smith, 2020)` -> `(Smith 2020)`
+        `(Mishra et al., 2015)` -> `(Mishra et al. 2015)`
+
+        Examples not flagged:
+        `(Smith 2020)`
+        `[GBIF.org, 2021]`
+        `Smith, 2020` because it is not bracketed
+        """
         violations = []
+        cleaned_text, index_map = self.strip_style_markers(
+            text,
+            italics=True,
+            bold=True,
+            superscript=True,
+            subscript=True,
+        )
+        pattern = re.compile(r'\((?P<body>[^\(\)]*?),\s*(?P<year>\d{4})\)')
 
-        # et al without period
-        etal_no_period = re.compile(r'\bet al\b(?!\.)')
-        for match in etal_no_period.finditer(text):
-            violations.append(self._create_violation(
+        for match in pattern.finditer(cleaned_text):
+            body = match.group("body").strip()
+            year = match.group("year")
+            fix = f"({body} {year})"
+            original_start = index_map[match.start()]
+            original_end = index_map[match.end() - 1] + 1
+            violations.append(self.create_violation(
+                section_name=section_name,
                 text=text,
-                matched_text=match.group(0),
-                start=match.start(),
-                end=match.end(),
-                message="Use 'et al.' with period",
-                suggested_fix="et al."
-            ))
-
-        # "et. al." or "et.al" - wrong format
-        etal_wrong = re.compile(r'\bet\.\s*al\.?\b')
-        for match in etal_wrong.finditer(text):
-            if match.group(0) != 'et al.':
-                violations.append(self._create_violation(
-                    text=text,
-                    matched_text=match.group(0),
-                    start=match.start(),
-                    end=match.end(),
-                    message="Use 'et al.' format (period after 'al' only)",
-                    suggested_fix="et al."
-                ))
-
-        return violations
-
-    def _check_citation_comma(self, text: str) -> List[Violation]:
-        """Check that there's no comma between author and date in citations."""
-        violations = []
-
-        # Pattern: "(Author, 2020)" - comma should not be there
-        pattern = re.compile(r'\(([A-Z][a-z]+(?:\s+et al\.)?),\s*(\d{4})\)')
-
-        for match in pattern.finditer(text):
-            author = match.group(1)
-            year = match.group(2)
-            fix = f"({author} {year})"
-            violations.append(self._create_violation(
-                text=text,
-                matched_text=match.group(0),
-                start=match.start(),
-                end=match.end(),
+                span=(original_start, original_end),
                 message=f"No comma between author and date: '{fix}'",
-                suggested_fix=fix
+                suggested_fix=fix,
             ))
 
         return violations
