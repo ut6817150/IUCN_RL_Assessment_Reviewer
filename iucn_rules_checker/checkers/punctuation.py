@@ -50,15 +50,16 @@ class PunctuationChecker(BaseChecker):
         return violations
 
     def check_range_dashes(self, section_name: str, text: str) -> List[Violation]:
-        """Ensure bare numeric ranges use an unspaced en dash.
+        """Ensure numeric ranges use an unspaced en dash.
 
         This method strips italic and bold markers, then looks for a plain
         numeric pair such as `10-20`, `10 - 20`, or `10 – 20`. It rewrites the
         separator to a bare en dash (`–`).
 
-        It intentionally ignores unit-bearing expressions. So `10-20` is
-        flagged, but `10-20 km`, `10 km - 20 km`, `5% - 7%`, and
-        `10 km<sup>2</sup> - 20 km<sup>2</sup>` are not.
+        Shared-unit forms are still checked, so `10-20 km`, `600-1200 m`,
+        `500-3000 mm`, and `14-26 °C` are flagged. However, expressions where
+        each endpoint carries its own unit are still ignored, such as
+        `10 km - 20 km`, `5% - 7%`, and `10 km<sup>2</sup> - 20 km<sup>2</sup>`.
 
         It also skips date-like three-part numeric chains such as
         `2022-08-01`, `08-01-2022`, and `08-2022-01`.
@@ -71,23 +72,17 @@ class PunctuationChecker(BaseChecker):
             superscript=False,
             subscript=False,
         )
-        unit_pattern = "|".join(
-            re.escape(unit) for unit in sorted(set(self.RANGE_UNITS), key=len, reverse=True)
-        )
         pattern = re.compile(
             rf"(?<!\w)(?P<left>\d{{1,4}})"
             rf"(?P<sep>\s*(?:-|{self.EN_DASH})\s*)"
             rf"(?P<right>\d{{1,4}})(?!\w)"
         )
-        trailing_unit_pattern = re.compile(rf"^\s*(?:{unit_pattern})(?!\w)")
 
         for match in pattern.finditer(cleaned_text):
             snippet = cleaned_text[match.start():match.end() + 5]
             if re.match(r"^\d{3}-\d{3}-\d{4}\b", snippet):
                 continue
             if self.is_date_like_numeric_chain(cleaned_text, match.start(), match.end()):
-                continue
-            if trailing_unit_pattern.match(cleaned_text[match.end():]):
                 continue
 
             after = cleaned_text[match.end():match.end() + 2]

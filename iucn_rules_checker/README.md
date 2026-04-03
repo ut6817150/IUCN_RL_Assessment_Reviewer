@@ -11,7 +11,7 @@ The package currently has three main responsibilities:
 - `assessment_parser.py`
   Converts a hierarchical assessment tree into a flat `section_name -> text` mapping.
 - `assessment_reviewer.py`
-  Runs the configured checker classes over the parsed report and returns a list of violations.
+  Runs the configured checker classes over an already parsed report and returns a list of violations.
 - `violation.py`
   Defines the `Violation` dataclass used as the shared output format.
 
@@ -96,28 +96,25 @@ print(next(iter(full_report.items())))
 
 ## IUCNAssessmentReviewer
 
-`IUCNAssessmentReviewer` is the orchestration layer.
+`IUCNAssessmentReviewer` reviews an already parsed report.
 
-It can be used in two ways:
+The intended workflow is now explicitly two-step:
 
-- `review_assessment(assessment)`
-  - takes a hierarchical assessment tree
-  - parses it first
-  - then reviews the parsed report
-- `review_full_report(full_report)`
-  - takes an already-flat `dict[str, str]`
-  - runs the configured checkers directly
+1. run `AssessmentParser.parse(assessment)` to build a flat `full_report`
+2. pass that `full_report` into `IUCNAssessmentReviewer.review_full_report(...)`
 
 Current reviewer behavior:
 
 - skips empty sections
 - skips parsed table sections entirely
+- routes bibliography sections to a dedicated `BibliographyChecker`
+- runs all other non-table sections through the normal checker list
 - calls `begin_sweep()` on every checker before a review pass
 - calls `end_sweep()` on every checker after the pass finishes
 
-### Default Checker Set
+### Section Routing
 
-The reviewer currently includes these checker classes:
+Normal non-bibliography sections are checked by `self.checkers`:
 
 - `AbbreviationChecker`
 - `DateChecker`
@@ -130,7 +127,18 @@ The reviewer currently includes these checker classes:
 - `ScientificNameChecker`
 - `SpellingChecker`
 
-Not included by default:
+Bibliography sections are routed to `self.bibliography_checker` only:
+
+- `BibliographyChecker`
+
+Current `BibliographyChecker` behavior combines:
+
+- `check_ampersand_usage(...)`
+- `AbbreviationChecker.check_et_al(...)`
+- `PunctuationChecker.check_range_dashes(...)`
+- `NumberChecker.check_large_numbers(...)`
+
+Not included in the normal reviewer flow:
 
 - `SymbolChecker`
 - `LanguageChecker`
@@ -141,6 +149,7 @@ Example:
 import json
 from pathlib import Path
 
+from iucn_rules_checker.assessment_parser import AssessmentParser
 from iucn_rules_checker.assessment_reviewer import IUCNAssessmentReviewer
 
 json_path = Path("iucn_rules_checker/test_json_file/Acianthera odontotepala_draft_status_Jun2025 (1).json")
@@ -148,8 +157,9 @@ json_path = Path("iucn_rules_checker/test_json_file/Acianthera odontotepala_draf
 with json_path.open(encoding="utf-8") as handle:
     assessment = json.load(handle)
 
+full_report = AssessmentParser().parse(assessment)
 reviewer = IUCNAssessmentReviewer()
-violations = reviewer.review_assessment(assessment)
+violations = reviewer.review_full_report(full_report)
 
 print(f"Violations: {len(violations)}")
 print(violations[0].to_dict())
@@ -239,6 +249,7 @@ That lets a checker match against normalized text but still create violations ag
 Checker modules currently present in `checkers/`:
 
 - `abbreviations.py`
+- `bibliography.py`
 - `dates.py`
 - `formatting.py`
 - `geography.py`
@@ -293,6 +304,7 @@ iucn_rules_checker/
 |  |- README.md
 |  |- abbreviations.py
 |  |- base.py
+|  |- bibliography.py
 |  |- dates.py
 |  |- formatting.py
 |  |- geography.py
@@ -308,6 +320,7 @@ iucn_rules_checker/
 |  `- test.ipynb
 |- tests/
 |  |- test_abbreviations.py
+|  |- test_bibliography.py
 |  |- test_assessment_parser.py
 |  |- test_assessment_reviewer.py
 |  |- test_base.py
@@ -355,7 +368,8 @@ violations.append(
 
 1. Create a new checker under `checkers/` as a `BaseChecker` subclass.
 2. Implement `check_text(...)`.
-3. Add it to `IUCNAssessmentReviewer.CHECKER_CLASSES` if it should run by default.
+3. Wire it into `IUCNAssessmentReviewer.__init__`:
+   add it to `self.checkers` for normal sections, or compose it into `self.bibliography_checker` if it should only run on bibliography content.
 4. Add tests under `tests/`.
 
 Minimal skeleton:

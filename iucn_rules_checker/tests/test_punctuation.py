@@ -70,10 +70,29 @@ class PunctuationCheckerTests(unittest.TestCase):
         self.assertEqual(len(range_violations), 1)
         self.assertEqual(range_violations[0].suggested_fix, "10\u201320")
 
-    def test_range_dashes_ignore_unit_ranges(self) -> None:
+    def test_range_dashes_flag_shared_unit_ranges(self) -> None:
+        checker = PunctuationChecker()
+        cases = {
+            "The transect was 10 - 20 km long.": "10\u201320",
+            "Elevation ranged from 600-1200 m.": "600\u20131200",
+            "Rainfall ranged from 500-3000 mm.": "500\u20133000",
+            "Rainfall ranged from 1900-5000 mm.": "1900\u20135000",
+            "Average temperatures were 14-26 \u00b0C.": "14\u201326",
+        }
+
+        for text, expected_fix in cases.items():
+            with self.subTest(text=text):
+                violations = checker.check(("Test Section", text))
+                range_violations = [
+                    violation for violation in violations
+                    if "numeric ranges" in violation.message
+                ]
+                self.assertEqual(len(range_violations), 1)
+                self.assertEqual(range_violations[0].suggested_fix, expected_fix)
+
+    def test_range_dashes_ignore_repeated_unit_ranges(self) -> None:
         checker = PunctuationChecker()
         texts = [
-            "The transect was 10 - 20 km long.",
             "The transect was 10km - 20 km long.",
             "The transect was 10 km - 20 km long.",
             "Cover declined from 5% - 7%.",

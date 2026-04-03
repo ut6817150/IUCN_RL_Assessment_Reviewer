@@ -15,26 +15,6 @@ from .base import BaseChecker
 class FormattingChecker(BaseChecker):
     """Checker for formatting rules such as scientific-name italics."""
 
-    FAMILY_SUFFIXES = {
-        'aceae',
-        'idae',
-        'ales',
-        'ineae',
-        'inae',
-        'eae',
-        'oideae',
-    }
-
-    KNOWN_FAMILIES = {
-        'Orchidaceae', 'Rubiaceae', 'Fabaceae', 'Asteraceae', 'Poaceae',
-        'Rosaceae', 'Euphorbiaceae', 'Lamiaceae', 'Malvaceae', 'Solanaceae',
-        'Brassicaceae', 'Apiaceae', 'Cactaceae', 'Acanthaceae', 'Araceae',
-        'Felidae', 'Canidae', 'Hominidae', 'Bovidae', 'Cervidae',
-        'Accipitridae', 'Columbidae', 'Psittacidae', 'Salamandridae',
-        'Rosales', 'Fabales', 'Asparagales', 'Lamiales', 'Solanales',
-        'Carnivora', 'Primates', 'Rodentia',
-    }
-
     def __init__(self):
         super().__init__()
         self._collected_higher_taxonomy_names: Set[str] = set()
@@ -57,7 +37,7 @@ class FormattingChecker(BaseChecker):
         """Check for formatting violations."""
         violations = []
         violations.extend(self.check_genus_and_species(section_name, text))
-        violations.extend(self.check_family_name_capitalized_and_not_italicized(section_name, text))
+        violations.extend(self.check_higher_order_taxonomy_formatting(section_name, text))
         violations.extend(self.check_eoo_aoo_capitalization(section_name, text))
         return violations
 
@@ -151,8 +131,8 @@ class FormattingChecker(BaseChecker):
 
         return violations
 
-    def check_family_name_capitalized_and_not_italicized(self, section_name: str, text: str) -> List[Violation]:
-        """Check that family/taxonomy names are capitalized and not italicized.
+    def check_higher_order_taxonomy_formatting(self, section_name: str, text: str) -> List[Violation]:
+        """Check harvested higher-order taxonomy names for capitalization/italics.
 
         This method strips non-italic inline style tags first:
         ``<b>``, ``<strong>``, ``<sup>``, and ``<sub>``.
@@ -169,42 +149,25 @@ class FormattingChecker(BaseChecker):
         sections in the same sweep. The temporary list is cleared when the
         sweep ends.
 
-        Outside those harvested higher-order names, the method also looks for
-        family- or higher-taxon-looking names based on the configured suffix
-        list, such as ``-aceae``, ``-idae`` and ``-ales``. It then checks two
-        things at once:
+        It then checks two things at once for those harvested names:
         - whether the name starts with a capital letter
         - whether the name is free of surrounding ``<i>...</i>`` or
           ``<em>...</em>`` markup
 
-        A suffix-based match is treated as worth checking if the capitalized
-        form is either:
-        - in the ``KNOWN_FAMILIES`` set, or
-        - not in ``KNOWN_FAMILIES`` but still has a stem of at least 4 letters
-          before the family/rank suffix
-
-        In practice, that means the method is willing to flag unknown-looking
-        names such as ``mysteriaceae`` because ``mysteri`` is long enough to
-        resemble a taxonomic stem, but it tries to avoid very short accidental
-        matches where a normal word happens to end with one of the suffixes.
-
         Examples flagged:
-        - ``orchidaceae`` -> suggests ``Orchidaceae``
-        - ``felidae`` -> suggests ``Felidae``
-        - ``<i>Orchidaceae</i>`` -> suggests ``Orchidaceae``
-        - ``<i>felidae</i>`` -> suggests ``Felidae``
         - after harvesting taxonomy names from a ladder entry:
           ``plantae`` -> suggests ``Plantae``
         - after harvesting taxonomy names from a ladder entry:
           ``<i>Magnoliopsida</i>`` -> suggests ``Magnoliopsida``
+        - after harvesting taxonomy names from a ladder entry:
+          ``<i>Fabaceae</i>`` -> suggests ``Fabaceae``
 
         Examples not flagged:
-        - ``Orchidaceae`` because it is capitalized and not italicized
-        - ``Felidae`` because it is capitalized and not italicized
-        - ``family`` because literal rank labels are outside this method's scope
-        - ``<i>family</i>`` because literal rank labels are outside this method's scope
-        - words that do not match one of the configured suffixes
-        - short suffix-matching words that do not look taxonomic enough to pass the plausibility check
+        - the taxonomy ladder entry that supplied the harvested names
+        - harvested names already written in correct title case without italics
+        - ``orchidaceae`` or ``Felidae`` before any ladder harvest
+        - non-harvested taxonomy-like words, because this method no longer
+          infers names from suffixes alone
         """
         cleaned_text, index_map = self.strip_style_markers(
             text,
@@ -237,47 +200,6 @@ class FormattingChecker(BaseChecker):
                     message=message,
                     suggested_fix=suggested_fix,
                 ))
-
-        suffix_pattern = '|'.join(re.escape(s) for s in self.FAMILY_SUFFIXES)
-        pattern = re.compile(
-            rf'(?P<markup><(?:i|em)>)?(?P<name>\b([A-Za-z][a-z]+)({suffix_pattern})\b)(?(markup)</(?:i|em)>)',
-            re.IGNORECASE,
-        )
-
-        for match in pattern.finditer(cleaned_text):
-            family_name = match.group('name')
-            stem_match = re.match(r'([A-Za-z][a-z]+)(' + suffix_pattern + r')$', family_name, re.IGNORECASE)
-            if stem_match is None:
-                continue
-
-            stem = stem_match.group(1)
-            suffix = stem_match.group(2)
-            proper_name = stem.capitalize() + suffix.lower()
-            is_known_or_plausible = proper_name in self.KNOWN_FAMILIES or len(stem) >= 4
-            if not is_known_or_plausible:
-                continue
-
-            is_capitalized = family_name == proper_name
-            is_italicized = match.group('markup') is not None
-
-            if is_capitalized and not is_italicized:
-                continue
-
-            original_span = (
-                index_map[match.start()],
-                index_map[match.end() - 1] + 1,
-            )
-            match_key = (original_span, proper_name)
-            if match_key in seen_matches:
-                continue
-            seen_matches.add(match_key)
-            violations.append(self.create_violation(
-                section_name=section_name,
-                text=text,
-                span=original_span,
-                message=f"Family/taxonomy names should be capitalized and not italicized: '{proper_name}'",
-                suggested_fix=proper_name,
-            ))
 
         return violations
 

@@ -69,7 +69,7 @@ class NumberCheckerTests(unittest.TestCase):
             ["Numbers 1-9 should be written out: '3' should be 'three'"],
         )
 
-    def test_small_numbers_do_not_run_in_bibliography_sections(self) -> None:
+    def test_small_numbers_still_work_when_called_directly_on_bibliography_sections(self) -> None:
         text = "There were 3 records and 2 notes in the bibliography."
 
         violations = NumberChecker().check(("Assessment > Bibliography [paragraph 1]", text))
@@ -78,7 +78,13 @@ class NumberCheckerTests(unittest.TestCase):
             if violation.message.startswith("Numbers 1-9 should be written out:")
         ]
 
-        self.assertEqual(messages, [])
+        self.assertEqual(
+            messages,
+            [
+                "Numbers 1-9 should be written out: '3' should be 'three'",
+                "Numbers 1-9 should be written out: '2' should be 'two'",
+            ],
+        )
 
     def test_very_large_numbers_flag_clean_millions_and_billions_only(self) -> None:
         text = (
@@ -206,7 +212,7 @@ class NumberCheckerTests(unittest.TestCase):
 
         self.assertEqual(matched_texts, ["3"])
 
-    def test_sentence_start_does_not_run_in_bibliography_sections(self) -> None:
+    def test_sentence_start_still_works_when_called_directly_on_bibliography_sections(self) -> None:
         text = "3 entries were reviewed. Martinez et al. 2006 described the site."
 
         violations = NumberChecker().check(("Assessment > Bibliography [paragraph 1]", text))
@@ -215,7 +221,10 @@ class NumberCheckerTests(unittest.TestCase):
             if violation.message == "Do not start sentences with numerals; write the number out or rephrase"
         ]
 
-        self.assertEqual(messages, [])
+        self.assertEqual(
+            messages,
+            ["Do not start sentences with numerals; write the number out or rephrase"],
+        )
 
 
 if __name__ == "__main__":

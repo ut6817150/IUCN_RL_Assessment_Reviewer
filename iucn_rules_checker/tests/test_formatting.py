@@ -90,31 +90,18 @@ class FormattingCheckerTests(unittest.TestCase):
             messages,
         )
 
-    def test_family_name_capitalized_and_not_italicized_checks_both_rules(self) -> None:
+    def test_higher_order_taxonomy_formatting_ignores_non_harvested_family_like_names(self) -> None:
         checker = FormattingChecker()
         text = (
             "orchidaceae is mentioned in plain text. "
             "The draft also contains <i>Orchidaceae</i> and <i>felidae</i>."
         )
 
-        family_name_violations = checker.check_family_name_capitalized_and_not_italicized("Formatting Section", text)
+        violations = checker.check_higher_order_taxonomy_formatting("Formatting Section", text)
 
-        self.assertEqual(len(family_name_violations), 3)
-        self.assertTrue(all(
-            violation.message.startswith("Family/taxonomy names should be capitalized and not italicized:")
-            for violation in family_name_violations
-        ))
-        family_messages = [violation.message for violation in family_name_violations]
-        self.assertIn(
-            "Family/taxonomy names should be capitalized and not italicized: 'Orchidaceae'",
-            family_messages,
-        )
-        self.assertIn(
-            "Family/taxonomy names should be capitalized and not italicized: 'Felidae'",
-            family_messages,
-        )
+        self.assertEqual(violations, [])
 
-    def test_family_name_rule_strips_non_italic_style_markers(self) -> None:
+    def test_higher_order_taxonomy_formatting_strips_non_italic_style_markers(self) -> None:
         checker = FormattingChecker()
         checker.begin_sweep()
         try:
@@ -123,16 +110,15 @@ class FormattingCheckerTests(unittest.TestCase):
                 "Acrocarpus - fraxinifolius</b>"
             )
             later_text = (
-                "<b>orchidaceae</b> is mentioned in bold plain text. "
-                "<b><i>Felidae</i></b> appears in bold italics. "
                 "<b>plantae</b> appears after the ladder entry."
+                " <b><i>Magnoliopsida</i></b> appears in bold italics."
             )
 
-            ladder_violations = checker.check_family_name_capitalized_and_not_italicized(
+            ladder_violations = checker.check_higher_order_taxonomy_formatting(
                 "Formatting Section",
                 ladder_text,
             )
-            later_violations = checker.check_family_name_capitalized_and_not_italicized(
+            later_violations = checker.check_higher_order_taxonomy_formatting(
                 "Formatting Section",
                 later_text,
             )
@@ -140,32 +126,28 @@ class FormattingCheckerTests(unittest.TestCase):
             self.assertEqual(ladder_violations, [])
             later_messages = [violation.message for violation in later_violations]
             self.assertIn(
-                "Family/taxonomy names should be capitalized and not italicized: 'Orchidaceae'",
-                later_messages,
-            )
-            self.assertIn(
-                "Family/taxonomy names should be capitalized and not italicized: 'Felidae'",
-                later_messages,
-            )
-            self.assertIn(
                 "Family/taxonomy names should be capitalized and not italicized: 'Plantae'",
+                later_messages,
+            )
+            self.assertIn(
+                "Family/taxonomy names should be capitalized and not italicized: 'Magnoliopsida'",
                 later_messages,
             )
         finally:
             checker.end_sweep()
 
-    def test_family_name_rule_harvests_higher_taxonomy_names_from_ladder_entry(self) -> None:
+    def test_higher_order_taxonomy_formatting_harvests_names_from_ladder_entry(self) -> None:
         checker = FormattingChecker()
         checker.begin_sweep()
         try:
             ladder_text = "PLANTAE - TRACHEOPHYTA - MAGNOLIOPSIDA - FABALES - FABACEAE - Acrocarpus - fraxinifolius"
             later_text = "plantae and <i>Magnoliopsida</i> appear here, as does <i>Fabaceae</i>."
 
-            ladder_violations = checker.check_family_name_capitalized_and_not_italicized(
+            ladder_violations = checker.check_higher_order_taxonomy_formatting(
                 "Formatting Section",
                 ladder_text,
             )
-            later_violations = checker.check_family_name_capitalized_and_not_italicized(
+            later_violations = checker.check_higher_order_taxonomy_formatting(
                 "Formatting Section",
                 later_text,
             )
@@ -187,7 +169,7 @@ class FormattingCheckerTests(unittest.TestCase):
         finally:
             checker.end_sweep()
 
-        cleared_violations = checker.check_family_name_capitalized_and_not_italicized(
+        cleared_violations = checker.check_higher_order_taxonomy_formatting(
             "Formatting Section",
             "plantae and Magnoliopsida appear here.",
         )

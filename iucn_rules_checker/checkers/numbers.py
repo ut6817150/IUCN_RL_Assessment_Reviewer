@@ -44,9 +44,6 @@ class NumberChecker(BaseChecker):
     def check_small_numbers(self, section_name: str, text: str) -> List[Violation]:
         """Check that standalone numerals 1-9 are written as words.
 
-        This rule does not run in sections whose name contains
-        ``Bibliography``.
-
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then checks the cleaned text
         for standalone small numerals while mapping any match span back to the
@@ -72,7 +69,6 @@ class NumberChecker(BaseChecker):
         `The species survives in 2 valleys`
 
         Examples not flagged:
-        any bibliography section, such as `Assessment > Bibliography`
         `3 May`
         `5 km`
         `7 ha`
@@ -82,9 +78,6 @@ class NumberChecker(BaseChecker):
         `4-5`
         `2 – 3`
         """
-        if "bibliography" in section_name.lower():
-            return []
-
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
             text,
@@ -231,9 +224,6 @@ class NumberChecker(BaseChecker):
     def check_sentence_start(self, section_name: str, text: str) -> List[Violation]:
         """Check that sentences do not start with numerals.
 
-        This rule does not run in sections whose name contains
-        ``Bibliography``.
-
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then looks for digit strings
         in the cleaned text that appear:
@@ -247,7 +237,6 @@ class NumberChecker(BaseChecker):
         `<b>3</b> sites were surveyed.`
 
         Examples not flagged:
-        any bibliography section, such as `Assessment > Bibliography`
         numbers that occur mid-sentence
         already written-out sentence starts such as `Three sites were surveyed.`
         bibliography-style years immediately following `et al. `
@@ -256,9 +245,6 @@ class NumberChecker(BaseChecker):
         This rule does not try to generate an automatic rewrite. It only
         reports that the sentence should be rephrased or the number written out.
         """
-        if "bibliography" in section_name.lower():
-            return []
-
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
             text,
