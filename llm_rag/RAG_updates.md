@@ -132,11 +132,11 @@ Recent work has focused on making the system easier to maintain and less fragile
 
 The solution now has three clear layers:
 
-1. `2_preprocessed_documents/`
+1. `ii_preprocessed_documents/`
    Turns PDFs into retrieval-ready records.
-2. `3_vector_db/`
+2. `iii_vector_db/`
    Builds and serves the reference retrieval system.
-3. `4_inference/`
+3. `iv_inference/`
    Adds uploaded-draft retrieval, prompt assembly, external LLM calls, and debug output for the app.
 
 ## What changed most conceptually
