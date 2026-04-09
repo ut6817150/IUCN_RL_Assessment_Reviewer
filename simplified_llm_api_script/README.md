@@ -169,8 +169,21 @@ Rules with no findings return an empty list. Rules that failed due to an LLM err
 
 ## Grid Testing
 
-`grid_test.py` runs all assessments in `json_converted/` against a configurable matrix of `(provider, model)` pairs. Results are written to `grid_outputs/` as:
+`grid_test.py` runs all assessments in `json_converted/` against a configurable matrix of `(provider, model)` pairs. The matrix is defined in the `GRID` list at the top of the file.
 
-- `{provider}__{model_slug}.json` — findings only
-- `{provider}__{model_slug}_meta.json` — full metadata (token usage, timing, errors)
+```bash
+python grid_test.py [--docs STEM ...] [--delay SECONDS]
+```
+
+| Argument | Default | Description |
+|---|---|---|
+| `--docs STEM ...` | all documents | Filter documents by filename stem substring. E.g. `--docs Test1 Test2` runs only files whose stem contains "Test1" or "Test2" |
+| `--delay SECONDS` | `2.0` | Seconds to wait between each `(doc, model)` run |
+
+Rules within a single run fire concurrently for normal models, and sequentially for OpenRouter `:free` models (which have tight rate limits).
+
+Results are written to `grid_outputs/` as:
+
+- `{doc_stem}/{provider}__{model_slug}.json` — findings only
+- `{doc_stem}/{provider}__{model_slug}_meta.json` — full metadata (token usage, timing, errors)
 - `_grid_summary.json` — aggregate across all runs
