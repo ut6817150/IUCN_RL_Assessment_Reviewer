@@ -1,5 +1,5 @@
 ---
-scope: 'relevant_section: Habitats and Ecology, Red List Assessment'
+scope: 'relevant_sections: Habitats and Ecology, Red List Assessment'
 severity: 'high'
 category: 'section_consistency'
 ---

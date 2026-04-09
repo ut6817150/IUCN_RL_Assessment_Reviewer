@@ -1,5 +1,5 @@
 ---
-scope: 'relevant_sections: Geographic Range, Occurrences, Red List Assessment'
+scope: 'relevant_sections: Distribution, Occurrence, Red List Assessment'
 severity: 'high'
 category: 'section_consistency'
 ---
