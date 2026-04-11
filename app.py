@@ -12,13 +12,12 @@ The script keeps the control flow inline so the tab behaviour is easy to trace
 from top to bottom during development.
 """
 
+import os
 import asyncio
 import json
 import tempfile
-from io import BytesIO
 from collections import defaultdict
 from pathlib import Path
-import os
 
 import pandas as pd
 import streamlit as st
@@ -40,6 +39,7 @@ from simplified_llm_api_script.llm_checker_v2 import ReviewDocumentError
 from simplified_llm_api_script.llm_checker_v2 import provider_from_config
 from simplified_llm_api_script.llm_checker_v2 import review_document
 
+from app_helpers import build_downloadable_feedback_excel
 
 OPENROUTER_API_KEY = os.getenv("OR_TOKEN")
 
@@ -480,11 +480,16 @@ with download_tab:
 
     has_rules_output = st.session_state.get("rules_feedback") is not None
     has_llm_output = st.session_state.get("llm_feedback") is not None
+    has_any_output = has_rules_output or has_llm_output
 
-    if not has_rules_output:
-        st.info("Run the rules-based feedback to enable downloads.")
+    if not has_any_output:
+        st.info("Run the rules-based feedback or the LLM feedback to enable downloads.")
     else:
         tab_labels = ["Rules"]
+        if not has_rules_output:
+            tab_labels = []
+        if has_rules_output:
+            tab_labels.append("Rules")
         if has_llm_output:
             tab_labels.append("LLM")
         tab_label_text = " + ".join(tab_labels)
@@ -494,65 +499,13 @@ with download_tab:
             key="generate_downloadable_feedback",
             type="primary",
         ):
-            excel_buffer = BytesIO()
-            with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-                rules_rows = []
-                rules_feedback = st.session_state.get("rules_feedback") or {}
-                grouped_violations = rules_feedback.get("grouped_violations") or {}
-                for section_name, rows in grouped_violations.items():
-                    for row in rows:
-                        rules_rows.append(
-                            {
-                                "Section title": section_name,
-                                "Matched text": row.get("matched_text", ""),
-                                "Context": row.get("matched_snippet", ""),
-                                "Message": row.get("message", ""),
-                                "Suggested fix": row.get("suggested_fix", ""),
-                            }
-                        )
-                    rules_rows.append(
-                        {
-                            "Section title": "",
-                            "Matched text": "",
-                            "Context": "",
-                            "Message": "",
-                            "Suggested fix": "",
-                        }
-                    )
-                if rules_rows:
-                    pd.DataFrame(rules_rows).to_excel(
-                        writer, index=False, sheet_name="Rules"
-                    )
-
-                if has_llm_output:
-                    llm_rows = []
-                    llm_feedback = st.session_state.get("llm_feedback") or {}
-                    for llm_result in llm_feedback.get("llm_results", []):
-                        findings = llm_result.get("findings") or []
-                        for finding in findings:
-                            llm_rows.append(
-                                {
-                                    "Report section": finding.get("section_path") or "",
-                                    "Feedback": finding.get("issue") or "",
-                                    "Suggestion": finding.get("suggestion") or "",
-                                }
-                            )
-                        llm_rows.append(
-                            {
-                                "Report section": "",
-                                "Feedback": "",
-                                "Suggestion": "",
-                            }
-                        )
-                    if llm_rows:
-                        pd.DataFrame(llm_rows).to_excel(
-                            writer, index=False, sheet_name="LLM"
-                        )
-
-            excel_buffer.seek(0)
+            excel_bytes = build_downloadable_feedback_excel(
+                rules_feedback=st.session_state.get("rules_feedback") if has_rules_output else None,
+                llm_feedback=st.session_state.get("llm_feedback") if has_llm_output else None,
+            )
             st.download_button(
                 label=f"Download feedback ({tab_label_text})",
-                data=excel_buffer.getvalue(),
+                data=excel_bytes,
                 file_name=f"{Path(uploaded_name).stem or 'feedback'}_feedback.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
