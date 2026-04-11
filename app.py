@@ -15,6 +15,7 @@ from top to bottom during development.
 import asyncio
 import json
 import tempfile
+from io import BytesIO
 from collections import defaultdict
 from pathlib import Path
 import os
@@ -56,7 +57,7 @@ LLM_TAB_CONFIGS = {
         "api_key": OPENROUTER_API_KEY,
         "reasoning_enabled": True,
     },
-    "Qwen 3.5 Plus (paid and retains data)": {
+    "Qwen 3.5 Plus 02-15 (Paid and retains data)": {
         "base_url": "https://openrouter.ai/api/v1/chat/completions",
         "model": "qwen/qwen3.5-plus-02-15",
         "api_key": OPENROUTER_API_KEY,
@@ -110,7 +111,6 @@ if uploaded:
         tmp_path.write_bytes(uploaded.getbuffer())
 
         st.success(f"Uploaded: {uploaded.name}")
-        st.caption(f"Temp file: {tmp_path}")
 
 # Reset cached tab outputs whenever the uploaded file changes.
 if st.session_state["uploaded_file_signature"] != file_signature:
@@ -125,8 +125,8 @@ if uploaded is None:
 elif tmp_path is not None:
     input_ready = True
 
-rules_tab, llm_tab, rag_tab = st.tabs(
-    ["Rules-based feedback", "LLM feedback", "RAG chat (prototype)"]
+rules_tab, llm_tab, rag_tab, download_tab = st.tabs(
+    ["Rules-based feedback", "LLM feedback", "RAG chat (prototype)", "Download feedback"]
 )
 
 with rules_tab:
@@ -193,8 +193,6 @@ with rules_tab:
                 table = pd.DataFrame(
                     [
                         {
-                            "Rule": row.get("rule_class", ""),
-                            "Method": row.get("rule_method", ""),
                             "Matched text": row.get("matched_text", ""),
                             "Context": row.get("matched_snippet", ""),
                             "Message": row.get("message", ""),
@@ -205,8 +203,6 @@ with rules_tab:
                 )
                 table = table[
                     [
-                        "Rule",
-                        "Method",
                         "Matched text",
                         "Context",
                         "Message",
@@ -474,3 +470,89 @@ with rag_tab:
                 }
             )
             st.rerun()
+
+with download_tab:
+    st.subheader("Download feedback")
+    st.write(
+        "Generate a downloadable Excel file containing the rules-based output "
+        "and, if available, the LLM feedback."
+    )
+
+    has_rules_output = st.session_state.get("rules_feedback") is not None
+    has_llm_output = st.session_state.get("llm_feedback") is not None
+
+    if not has_rules_output:
+        st.info("Run the rules-based feedback to enable downloads.")
+    else:
+        tab_labels = ["Rules"]
+        if has_llm_output:
+            tab_labels.append("LLM")
+        tab_label_text = " + ".join(tab_labels)
+
+        if st.button(
+            "Generate downloadable feedback",
+            key="generate_downloadable_feedback",
+            type="primary",
+        ):
+            excel_buffer = BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+                rules_rows = []
+                rules_feedback = st.session_state.get("rules_feedback") or {}
+                grouped_violations = rules_feedback.get("grouped_violations") or {}
+                for section_name, rows in grouped_violations.items():
+                    for row in rows:
+                        rules_rows.append(
+                            {
+                                "Section title": section_name,
+                                "Matched text": row.get("matched_text", ""),
+                                "Context": row.get("matched_snippet", ""),
+                                "Message": row.get("message", ""),
+                                "Suggested fix": row.get("suggested_fix", ""),
+                            }
+                        )
+                    rules_rows.append(
+                        {
+                            "Section title": "",
+                            "Matched text": "",
+                            "Context": "",
+                            "Message": "",
+                            "Suggested fix": "",
+                        }
+                    )
+                if rules_rows:
+                    pd.DataFrame(rules_rows).to_excel(
+                        writer, index=False, sheet_name="Rules"
+                    )
+
+                if has_llm_output:
+                    llm_rows = []
+                    llm_feedback = st.session_state.get("llm_feedback") or {}
+                    for llm_result in llm_feedback.get("llm_results", []):
+                        findings = llm_result.get("findings") or []
+                        for finding in findings:
+                            llm_rows.append(
+                                {
+                                    "Report section": finding.get("section_path") or "",
+                                    "Feedback": finding.get("issue") or "",
+                                    "Suggestion": finding.get("suggestion") or "",
+                                }
+                            )
+                        llm_rows.append(
+                            {
+                                "Report section": "",
+                                "Feedback": "",
+                                "Suggestion": "",
+                            }
+                        )
+                    if llm_rows:
+                        pd.DataFrame(llm_rows).to_excel(
+                            writer, index=False, sheet_name="LLM"
+                        )
+
+            excel_buffer.seek(0)
+            st.download_button(
+                label=f"Download feedback ({tab_label_text})",
+                data=excel_buffer.getvalue(),
+                file_name=f"{Path(uploaded_name).stem or 'feedback'}_feedback.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
