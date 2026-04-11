@@ -66,7 +66,6 @@ class AssessmentReviewerTests(unittest.TestCase):
                 "BibliographyChecker",
                 "AbbreviationChecker",
                 "PunctuationChecker",
-                "NumberChecker",
             ],
         )
         self.assertEqual(messages[:2], [
@@ -74,10 +73,7 @@ class AssessmentReviewerTests(unittest.TestCase):
             "Use italicized 'et al.'",
         ])
         self.assertIn("Use an unspaced en dash", messages[2])
-        self.assertEqual(
-            messages[3],
-            "Use standard comma placement for numbers: '5000' should be '5,000'",
-        )
+        self.assertEqual(len(messages), 3)
 
 
 if __name__ == "__main__":

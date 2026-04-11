@@ -20,11 +20,49 @@ class SymbolChecker(BaseChecker):
     def check_text(self, section_name: str, text: str) -> List[Violation]:
         """Check for symbol and unit formatting violations."""
         violations = []
+        violations.extend(self.check_ampersand_usage(section_name, text))
         violations.extend(self.check_area_units(section_name, text))
         violations.extend(self.check_degree_text(section_name, text))
         violations.extend(self.check_degree_symbol_spacing(section_name, text))
         violations.extend(self.check_percentage(section_name, text))
         violations.extend(self.check_percentage_symbol_spacing(section_name, text))
+        return violations
+
+    def check_ampersand_usage(self, section_name: str, text: str) -> List[Violation]:
+        """Flag literal `&` characters and suggest `and`.
+
+        This rule strips all simple style markers, then flags each literal
+        ampersand character in the cleaned text.
+
+        Examples flagged:
+        `forest & woodland`
+        `grassland & wetland`
+        `<i>forest</i> <b>&</b> woodland`
+
+        Examples not flagged:
+        `forest and woodland`
+        text with no literal ampersand character
+        """
+        violations = []
+        cleaned_text, index_map = self.strip_style_markers(
+            text,
+            italics=True,
+            bold=True,
+            superscript=True,
+            subscript=True,
+        )
+
+        for match in re.finditer(r"&", cleaned_text):
+            start = index_map[match.start()]
+            end = index_map[match.end() - 1] + 1
+            violations.append(self.create_violation(
+                section_name=section_name,
+                text=text,
+                span=(start, end),
+                message="Use 'and' not '&'",
+                suggested_fix="and",
+            ))
+
         return violations
 
     def check_area_units(self, section_name: str, text: str) -> List[Violation]:

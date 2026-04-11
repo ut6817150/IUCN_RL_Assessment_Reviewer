@@ -8,6 +8,36 @@ from iucn_rules_checker.checkers.symbols import SymbolChecker
 class SymbolCheckerTests(unittest.TestCase):
     """Check the current symbol rules."""
 
+    def test_ampersand_usage_flags_literal_ampersands(self) -> None:
+        checker = SymbolChecker()
+        violations = checker.check((
+            "Assessment > Rationale [paragraph 1]",
+            "The habitat includes forest & woodland and grassland & wetland.",
+        ))
+
+        ampersand_violations = [
+            violation for violation in violations
+            if violation.message == "Use 'and' not '&'"
+        ]
+
+        self.assertEqual(len(ampersand_violations), 2)
+        self.assertTrue(all(v.suggested_fix == "and" for v in ampersand_violations))
+
+    def test_ampersand_usage_ignores_simple_style_tags(self) -> None:
+        checker = SymbolChecker()
+        violations = checker.check((
+            "Assessment > Rationale [paragraph 1]",
+            "<i>forest</i> <b>&</b> woodland",
+        ))
+
+        ampersand_violations = [
+            violation for violation in violations
+            if violation.message == "Use 'and' not '&'"
+        ]
+
+        self.assertEqual(len(ampersand_violations), 1)
+        self.assertEqual(ampersand_violations[0].suggested_fix, "and")
+
     def test_area_units_ignore_simple_style_tags(self) -> None:
         checker = SymbolChecker()
         violations = checker.check((

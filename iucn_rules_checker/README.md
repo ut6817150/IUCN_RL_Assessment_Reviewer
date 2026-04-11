@@ -138,7 +138,6 @@ Current `BibliographyChecker` behavior combines:
 - `check_ampersand_usage(...)`
 - `AbbreviationChecker.check_et_al(...)`
 - `PunctuationChecker.check_range_dashes(...)`
-- `NumberChecker.check_large_numbers(...)`
 
 Not included in the normal reviewer flow:
 

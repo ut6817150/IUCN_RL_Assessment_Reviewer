@@ -756,7 +756,7 @@ Detailed coverage:
 
 - `begin_sweep(...)`
   How it works:
-  forwards `begin_sweep()` to the embedded `AbbreviationChecker`, `NumberChecker`, and `PunctuationChecker` helpers.
+  forwards `begin_sweep()` to the embedded `AbbreviationChecker` and `PunctuationChecker` helpers.
 
   - Catches:
     - no violations; this is lifecycle setup only
@@ -770,9 +770,8 @@ Detailed coverage:
   - `check_ampersand_usage(...)`
   - `AbbreviationChecker.check_et_al(...)`
   - `PunctuationChecker.check_range_dashes(...)`
-  - `NumberChecker.check_large_numbers(...)`
 
-  The imported helper methods keep their original `rule_class` and `rule_method` values, so bibliography output can still contain `AbbreviationChecker`, `PunctuationChecker`, and `NumberChecker` violations.
+  The imported helper methods keep their original `rule_class` and `rule_method` values, so bibliography output can still contain `AbbreviationChecker` and `PunctuationChecker` violations.
   Hard-coded/structural dependency:
   this dispatcher depends on the literal section-name substring `Bibliography` and on the behavior of the embedded helper checkers.
 
@@ -780,18 +779,17 @@ Detailed coverage:
     - bibliography ampersands such as `Smith & Jones 2020`
     - bibliography `et al.` issues such as `Mishra et al. 2015`
     - bibliography numeric ranges such as `Journal 10-20`
-    - bibliography large numbers such as `Flora 5000 species`
 
   - Misses:
     - all non-bibliography sections
-    - bibliography issues outside the four checks listed above
+    - bibliography issues outside the three checks listed above
     - any deeper reference parsing beyond what the embedded helper methods already do
 
 - `check_ampersand_usage(...)`
   How it works:
-  only runs when `section_name` contains `Bibliography`, strips all simple style markers, then flags every literal `&` and suggests `and`.
+  only runs when `section_name` contains `Bibliography`, strips all simple style markers, clips the text to the portion before the first standalone four-digit year, then flags every literal `&` in that clipped author portion and suggests `and`.
   Hard-coded scope:
-  this method depends on the literal section-name substring `Bibliography` and the literal character `&`.
+  this method depends on the literal section-name substring `Bibliography`, the literal character `&`, and a simple first-year cutoff based on the first standalone four-digit number.
 
   - Catches:
     - `Smith & Jones 2020`
@@ -801,11 +799,12 @@ Detailed coverage:
   - Misses:
     - the same text outside bibliography sections
     - cases where no literal `&` is present
-    - because it is intentionally broad, it can also catch non-author ampersands inside bibliography text
+    - ampersands that appear only after the first standalone four-digit year, such as `Smith 2020 & Brown 2021`
+    - because it is still regex-based, it does not truly parse bibliography authorship structure
 
 - `end_sweep(...)`
   How it works:
-  forwards `end_sweep()` to the embedded `AbbreviationChecker`, `NumberChecker`, and `PunctuationChecker` helpers.
+  forwards `end_sweep()` to the embedded `AbbreviationChecker` and `PunctuationChecker` helpers.
 
   - Catches:
     - no violations; this is lifecycle cleanup only
@@ -815,7 +814,7 @@ Detailed coverage:
 
 Aggregated misses for `BibliographyChecker`:
 - it does not validate full bibliography structure
-- it only checks ampersands plus the embedded `et al.`, range-dash, and large-number rules
+- it only checks ampersands plus the embedded `et al.` and range-dash rules
 - it does not check DOI, URL, title, journal, page, or author-order formatting
 
 ### `references.py` - `ReferenceChecker`
@@ -932,6 +931,8 @@ Bibliography sections still do not use `SymbolChecker`, because those sections
 are routed to `BibliographyChecker` only.
 
 Aggregated method list:
+- `check_ampersand_usage(...)`
+  Replaces literal `&` with `and`.
 - `check_area_units(...)`
   Normalizes a small set of text-based area units into squared-symbol forms.
 - `check_degree_text(...)`
@@ -944,6 +945,22 @@ Aggregated method list:
   Removes spaces before `%` and adds spaces between integers and a short list of units.
 
 Detailed coverage:
+
+- `check_ampersand_usage(...)`
+  How it works:
+  strips all simple style markers, then flags every literal `&` and suggests `and`.
+  Hard-coded scope:
+  this method only checks the literal character `&`.
+
+  - Catches:
+    - `forest & woodland`
+    - `grassland & wetland`
+    - `<i>forest</i> <b>&</b> woodland`
+
+  - Misses:
+    - `forest and woodland`
+    - text with no literal ampersand
+    - semantic cases where `&` might be intentionally preserved outside this style rule
 
 - `check_area_units(...)`
   How it works:
@@ -1048,6 +1065,7 @@ Aggregated misses for `SymbolChecker`:
 - it does not normalize every unit in the style guide
 - it is formatting-oriented, not measurement-aware
 - most rules use short fixed unit lists rather than general SI parsing
+- ampersand handling is literal and does not try to infer when `&` should be preserved for semantic reasons
 
 ## Notes On Overlap
 
