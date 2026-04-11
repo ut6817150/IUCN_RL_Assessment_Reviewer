@@ -56,6 +56,12 @@ LLM_TAB_CONFIGS = {
         "api_key": OPENROUTER_API_KEY,
         "reasoning_enabled": True,
     },
+    "Qwen 3.5 Plus (paid and retains data)": {
+        "base_url": "https://openrouter.ai/api/v1/chat/completions",
+        "model": "qwen/qwen3.5-plus-02-15",
+        "api_key": OPENROUTER_API_KEY,
+        "reasoning_enabled": True,
+    },
 }
 
 st.set_page_config(page_title="IUCN Assessment Feedback Tool", layout="wide")
