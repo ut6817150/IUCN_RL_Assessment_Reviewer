@@ -295,7 +295,7 @@ class FormattingChecker(BaseChecker):
                     text=text,
                     span=original_span,
                     message=message,
-                    suggested_fix=f"<i>{normalized_name}</i>",
+                    suggested_fix=f"Italicized: {normalized_name}",
                 ))
 
         return violations
@@ -348,6 +348,7 @@ class FormattingChecker(BaseChecker):
             ))
 
         return violations
+    
     def is_inside_italic(self, text: str, start: int, end: int) -> bool:
         """Check if a position is inside italic tags."""
         before = text[:start]
