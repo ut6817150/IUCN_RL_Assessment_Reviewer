@@ -2,7 +2,7 @@
 
 This folder contains the preprocessing parser used to convert assessment files into structured JSON.
 
-## Current Contents
+## Contents
 
 ### `assessment_processor.py`
 
@@ -83,22 +83,34 @@ If you want to save the result manually:
 python3.12 assessment_processor.py "<path-to-file>.docx" > "output.json"
 ```
 
-## `parse_to_dict()` Helper
+## Test Notebooks
 
-`assessment_processor.py` also exposes a helper function:
+The folder `test_preprocessing/` contains notebooks for manual testing, unit testing, and evaluation testing.
 
-```python
-from assessment_processor import parse_to_dict
-```
+### `test_output_formate.ipynb`
 
-This function accepts a single `.docx`, `.html`, or `.htm` path and returns the parsed dictionary directly.
+Use this notebook to quickly inspect parser output for a single document.
 
-## Test Notebook
+- purpose: choose a document path, run `parse_to_dict`, and print the parsed dictionary in standard JSON format
+- input: set `DOCUMENT_PATH` inside the notebook
+- output: formatted JSON printed in the notebook
 
-The folder [test_preprocessing] contains a notebook for quick manual testing:
+### `unit_tests.ipynb`
 
-- notebook: [test_preprocessing.ipynb]
-- purpose: choose a document path, run `parse_to_dict`, and inspect the parsed JSON output interactively
+Use this notebook to test individual parser functions and expected parser behavior.
+
+- purpose: run focused tests for rich-text rendering, table extraction, heading detection, DOCX parsing, HTML parsing, and error handling
+- output: each test section prints `PASS` or `FAIL`
+- note: the tests use small temporary DOCX and HTML fixtures created inside the notebook
+
+### `evaluation_tests.ipynb`
+
+Use this notebook to evaluate the final parsed JSON dictionary using parser-output metrics.
+
+- purpose: parse the sample document and score the output dictionary using evaluation metrics
+- sample file: `Myrcia neosmithii_draft_status_Apr2022_v2.docx`
+- metrics include schema completeness, heading tree recall, block type distribution accuracy, plain text exact-match recall, rich-text formatting recall, table cell exact-match accuracy, style feature recall, comment output match, and overall parser evaluation score
+- output: each metric prints `PASS` or `FAIL` plus the metric score
 
 ## Recommended Process
 
@@ -115,8 +127,19 @@ The folder [test_preprocessing] contains a notebook for quick manual testing:
 
 ### If you want to test interactively
 
-1. Open [test_preprocessing.ipynb]
+1. Open `test_preprocessing/test_output_formate.ipynb`
 2. Set `DOCUMENT_PATH`
 3. Run the notebook cells
 
+### If you want to run tests
+
+1. Open `test_preprocessing/unit_tests.ipynb`
+2. Run all cells
+3. Check that every test prints `PASS`
+
+### If you want to run parser-output evaluation metrics
+
+1. Open `test_preprocessing/evaluation_tests.ipynb`
+2. Run all cells
+3. Review each printed score and the overall parser evaluation score
 
