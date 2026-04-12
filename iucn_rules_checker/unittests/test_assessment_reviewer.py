@@ -75,6 +75,38 @@ class AssessmentReviewerTests(unittest.TestCase):
         self.assertIn("Use an unspaced en dash", messages[2])
         self.assertEqual(len(messages), 3)
 
+    def test_clean_up_violations_strips_style_markup_from_context_and_message(self) -> None:
+        reviewer = IUCNAssessmentReviewer()
+        full_report = {
+            "Assessment > Taxonomy [paragraph 1]": (
+                "PLANTAE - TRACHEOPHYTA - MAGNOLIOPSIDA - FABALES - FABACEAE - Acrocarpus - fraxinifolius"
+            ),
+            "Assessment > Notes [paragraph 1]": (
+                "The survey recorded <b><i>Fraxinifolius</i></b> seedlings."
+            ),
+        }
+
+        violations = reviewer.review_full_report(full_report)
+        cleaned_violations = reviewer.clean_up_violations(violations)
+        species_violations = [
+            violation for violation in cleaned_violations
+            if violation.rule_method == "FormattingChecker.check_genus_and_species"
+        ]
+
+        self.assertEqual(len(species_violations), 1)
+        self.assertEqual(
+            species_violations[0].message,
+            "Scientific names should be italicized and use correct case: 'fraxinifolius'",
+        )
+        self.assertEqual(
+            species_violations[0].matched_snippet,
+            "survey recorded Fraxinifolius seedlings.",
+        )
+        self.assertNotIn("<", species_violations[0].message)
+        self.assertNotIn(">", species_violations[0].message)
+        self.assertNotIn("<", species_violations[0].matched_snippet)
+        self.assertNotIn(">", species_violations[0].matched_snippet)
+
 
 if __name__ == "__main__":
     unittest.main()

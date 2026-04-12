@@ -93,3 +93,17 @@ class IUCNAssessmentReviewer:
                 checker.end_sweep()
 
         return violations
+
+    def clean_up_violations(self, violations: List[Violation]) -> List[Violation]:
+        """Strip simple inline style tags from violation text fields."""
+        style_pattern = re.compile(
+            r"</?(?:i|em|b|strong|sup|sub)>",
+            re.IGNORECASE,
+        )
+
+        for violation in violations:
+            violation.matched_text = style_pattern.sub("", violation.matched_text)
+            violation.matched_snippet = style_pattern.sub("", violation.matched_snippet)
+            violation.message = style_pattern.sub("", violation.message)
+
+        return violations
