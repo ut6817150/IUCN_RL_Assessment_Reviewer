@@ -144,15 +144,17 @@ with rules_tab:
             parser = AssessmentParser()
             reviewer = IUCNAssessmentReviewer()
             full_report = parser.parse(assessment)
-            violations = [
-                violation.to_dict()
-                for violation in reviewer.review_full_report(full_report)
+            raw_violations = reviewer.review_full_report(full_report)
+            raw_violations_dicts = [violation.to_dict() for violation in raw_violations]
+            cleaned_violations = reviewer.clean_up_violations(list(raw_violations))
+            cleaned_violations_dicts = [
+                violation.to_dict() for violation in cleaned_violations
             ]
 
             # Preserve the document's original section order rather than sorting
             # headings alphabetically in the UI.
             grouped_violations = defaultdict(list)
-            for violation in violations:
+            for violation in cleaned_violations_dicts:
                 section_name = normalize_display_section_name(
                     violation.get("section_name") or "Whole document"
                 )
@@ -173,7 +175,8 @@ with rules_tab:
                     ordered_grouped_violations[section_name] = rows
 
             st.session_state["rules_feedback"] = {
-                "violations": violations,
+                "violations": cleaned_violations_dicts,
+                "raw_violations": raw_violations_dicts,
                 "grouped_violations": ordered_grouped_violations,
             }
 
@@ -181,13 +184,13 @@ with rules_tab:
         st.info("Click `Generate feedback` in this tab to run the rules-based reviewer.")
     else:
         feedback = st.session_state["rules_feedback"]
-        violations = feedback["violations"]
+        cleaned_violations_dicts = feedback["violations"]
         grouped_violations = feedback["grouped_violations"]
 
-        if not violations:
+        if not cleaned_violations_dicts:
             st.success("No rules-based violations were found for this document.")
         else:
-            st.metric("Violations found", len(violations))
+            st.metric("Violations found", len(cleaned_violations_dicts))
 
             for section_name, rows in grouped_violations.items():
                 table = pd.DataFrame(
@@ -216,7 +219,11 @@ with rules_tab:
 
             st.download_button(
                 label="Download rules feedback (JSON)",
-                data=json.dumps(grouped_violations, indent=2, ensure_ascii=False).encode("utf-8"),
+                data=json.dumps(
+                    feedback.get("raw_violations", []),
+                    indent=2,
+                    ensure_ascii=False,
+                ).encode("utf-8"),
                 file_name=f"{Path(uploaded_name).stem}_rules_feedback.json",
                 mime="application/json",
             )
@@ -474,38 +481,52 @@ with rag_tab:
 with download_tab:
     st.subheader("Download feedback")
     st.write(
-        "Generate a downloadable Excel file containing the rules-based output "
-        "and, if available, the LLM feedback."
+        "Generate a downloadable Excel file containing whichever feedback is ready "
+        "(rules-based, LLM, or both)."
     )
 
     has_rules_output = st.session_state.get("rules_feedback") is not None
     has_llm_output = st.session_state.get("llm_feedback") is not None
     has_any_output = has_rules_output or has_llm_output
 
-    if not has_any_output:
-        st.info("Run the rules-based feedback or the LLM feedback to enable downloads.")
-    else:
-        tab_labels = ["Rules"]
-        if not has_rules_output:
-            tab_labels = []
+    status_col_1, status_col_2 = st.columns(2)
+    with status_col_1:
         if has_rules_output:
-            tab_labels.append("Rules")
+            st.success("Rules-based feedback ready")
+        else:
+            st.warning("Rules-based feedback not ready")
+    with status_col_2:
         if has_llm_output:
-            tab_labels.append("LLM")
-        tab_label_text = " + ".join(tab_labels)
+            st.success("LLM feedback ready")
+        else:
+            st.warning("LLM feedback not ready")
+    st.caption(
+        "At least one of these feedbacks must be ready for the download to be available."
+    )
 
-        if st.button(
-            "Generate downloadable feedback",
-            key="generate_downloadable_feedback",
-            type="primary",
-        ):
-            excel_bytes = build_downloadable_feedback_excel(
-                rules_feedback=st.session_state.get("rules_feedback") if has_rules_output else None,
-                llm_feedback=st.session_state.get("llm_feedback") if has_llm_output else None,
-            )
-            st.download_button(
-                label=f"Download feedback ({tab_label_text})",
-                data=excel_bytes,
-                file_name=f"{Path(uploaded_name).stem or 'feedback'}_feedback.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
+    tab_labels = []
+    if has_rules_output:
+        tab_labels.append("Rules")
+    if has_llm_output:
+        tab_labels.append("LLM")
+    tab_label_text = " + ".join(tab_labels) if tab_labels else "No data"
+
+    if not has_any_output:
+        st.download_button(
+            label="Download feedback",
+            data=b"",
+            file_name=f"{Path(uploaded_name).stem or 'feedback'}_feedback.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            disabled=True,
+        )
+    else:
+        excel_bytes = build_downloadable_feedback_excel(
+            rules_feedback=st.session_state.get("rules_feedback") if has_rules_output else None,
+            llm_feedback=st.session_state.get("llm_feedback") if has_llm_output else None,
+        )
+        st.download_button(
+            label="Download feedback",
+            data=excel_bytes,
+            file_name=f"{Path(uploaded_name).stem or 'feedback'}_feedback.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
