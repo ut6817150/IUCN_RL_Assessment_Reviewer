@@ -147,10 +147,6 @@ Current `BibliographyChecker` behavior combines:
 - `AbbreviationChecker.check_et_al(...)`
 - `PunctuationChecker.check_range_dashes(...)`
 
-Not included in the normal reviewer flow:
-
-- `LanguageChecker`
-
 Example:
 
 ```python
