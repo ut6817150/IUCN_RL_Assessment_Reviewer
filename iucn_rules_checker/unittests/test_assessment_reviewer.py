@@ -6,9 +6,23 @@ from iucn_rules_checker.assessment_reviewer import IUCNAssessmentReviewer
 
 
 class AssessmentReviewerTests(unittest.TestCase):
-    """Check which checker classes the reviewer wires in."""
+    """
+    Check which checker classes the reviewer wires in.
+
+    Purpose:
+        This test case groups regression checks for the current behavior covered by the enclosed tests.
+    """
 
     def test_reviewer_includes_all_checkers_except_language(self) -> None:
+        """
+        Test that reviewer includes all checkers except language.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         reviewer = IUCNAssessmentReviewer()
         configured_checkers = [type(checker).__name__ for checker in reviewer.checkers]
 
@@ -34,6 +48,15 @@ class AssessmentReviewerTests(unittest.TestCase):
         self.assertFalse(hasattr(reviewer, "review_assessment"))
 
     def test_reviewer_skips_table_sections_but_checks_paragraph_sections(self) -> None:
+        """
+        Test that reviewer skips table sections but checks paragraph sections.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         reviewer = IUCNAssessmentReviewer()
         full_report = {
             "Assessment > Notes [paragraph 1]": "Examples occur e.g. in text.",
@@ -49,6 +72,15 @@ class AssessmentReviewerTests(unittest.TestCase):
         self.assertNotIn("Assessment > Notes [table 1] [row 1]", sections)
 
     def test_reviewer_runs_only_bibliography_checker_in_bibliography_sections(self) -> None:
+        """
+        Test that reviewer runs only bibliography checker in bibliography sections.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         reviewer = IUCNAssessmentReviewer()
         full_report = {
             "Assessment > Bibliography [paragraph 1]": (
@@ -76,6 +108,15 @@ class AssessmentReviewerTests(unittest.TestCase):
         self.assertEqual(len(messages), 3)
 
     def test_clean_up_violations_strips_style_markup_from_context_and_message(self) -> None:
+        """
+        Test that clean up violations strips style markup from context and message.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         reviewer = IUCNAssessmentReviewer()
         full_report = {
             "Assessment > Taxonomy [paragraph 1]": (

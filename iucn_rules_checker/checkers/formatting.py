@@ -13,28 +13,67 @@ from .base import BaseChecker
 
 
 class FormattingChecker(BaseChecker):
-    """Checker for formatting rules such as scientific-name italics."""
+    """
+    Checker for formatting rules such as scientific-name italics.
+
+    Purpose:
+        This class groups related rules within the rules-based assessment workflow.
+    """
 
     def __init__(self):
+        """
+        Initialise sweep-level state for harvested taxonomy names.
+
+        Args:
+            None.
+
+        Returns:
+            None (mutates harvested-name caches in place).
+        """
         super().__init__()
         self._collected_higher_taxonomy_names: Set[str] = set()
         self._collected_genus_name: Optional[str] = None
         self._collected_species_name: Optional[str] = None
 
     def begin_sweep(self) -> None:
-        """Reset temporary taxonomy names before processing a full report."""
+        """
+        Reset temporary taxonomy names before processing a full report.
+
+        Args:
+            None.
+
+        Returns:
+            None: Value produced by this method.
+        """
         self._collected_higher_taxonomy_names.clear()
         self._collected_genus_name = None
         self._collected_species_name = None
 
     def end_sweep(self) -> None:
-        """Clear temporary taxonomy names after processing a full report."""
+        """
+        Clear temporary taxonomy names after processing a full report.
+
+        Args:
+            None.
+
+        Returns:
+            None: Value produced by this method.
+        """
         self._collected_higher_taxonomy_names.clear()
         self._collected_genus_name = None
         self._collected_species_name = None
 
     def check_text(self, section_name: str, text: str) -> List[Violation]:
-        """Check for formatting violations."""
+        """
+        Check for formatting violations.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
+        """
         violations = []
         violations.extend(self.check_genus_and_species(section_name, text))
         violations.extend(self.check_higher_order_taxonomy_formatting(section_name, text))
@@ -42,7 +81,8 @@ class FormattingChecker(BaseChecker):
         return violations
 
     def check_eoo_aoo_capitalization(self, section_name: str, text: str) -> List[Violation]:
-        """Check capitalization of spelled-out EOO/AOO phrases.
+        """
+        Check capitalization of spelled-out EOO/AOO phrases.
 
         This method strips simple inline style tags first:
         ``<i>``, ``<em>``, ``<b>``, ``<strong>``, ``<sup>``, and ``<sub>``.
@@ -85,6 +125,13 @@ class FormattingChecker(BaseChecker):
         - ``EOO`` and ``AOO`` abbreviations
         - misspelled forms such as ``extent of occurence``
         - reworded phrases such as ``occupied area``
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -132,7 +179,8 @@ class FormattingChecker(BaseChecker):
         return violations
 
     def check_higher_order_taxonomy_formatting(self, section_name: str, text: str) -> List[Violation]:
-        """Check harvested higher-order taxonomy names for capitalization/italics.
+        """
+        Check harvested higher-order taxonomy names for capitalization/italics.
 
         This method strips non-italic inline style tags first:
         ``<b>``, ``<strong>``, ``<sup>``, and ``<sub>``.
@@ -168,6 +216,13 @@ class FormattingChecker(BaseChecker):
         - ``orchidaceae`` or ``Felidae`` before any ladder harvest
         - non-harvested taxonomy-like words, because this method no longer
           infers names from suffixes alone
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         cleaned_text, index_map = self.strip_style_markers(
             text,
@@ -204,7 +259,8 @@ class FormattingChecker(BaseChecker):
         return violations
 
     def check_genus_and_species(self, section_name: str, text: str) -> List[Violation]:
-        """Check harvested genus/species names for italics and casing.
+        """
+        Check harvested genus/species names for italics and casing.
 
         This method strips non-italic inline style tags first:
         ``<b>``, ``<strong>``, ``<sup>``, and ``<sub>``.
@@ -240,6 +296,13 @@ class FormattingChecker(BaseChecker):
         - ``<i>Acrocarpus</i>``
         - ``<i>fraxinifolius</i>``
         - names before any taxonomy ladder has been harvested in the current sweep
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         cleaned_text, index_map = self.strip_style_markers(
             text,
@@ -301,7 +364,15 @@ class FormattingChecker(BaseChecker):
         return violations
 
     def collect_taxonomy_names_from_ladder(self, text: str) -> bool:
-        """Harvest higher taxonomy names plus genus/species from a ladder entry."""
+        """
+        Harvest higher taxonomy names plus genus/species from a ladder entry.
+
+        Args:
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            bool: Boolean result described by the summary line above.
+        """
         segments = [segment.strip() for segment in text.split(' - ') if segment.strip()]
         if len(segments) < 6:
             return False
@@ -327,7 +398,16 @@ class FormattingChecker(BaseChecker):
         return True
 
     def find_taxonomy_name_violations(self, text: str, proper_name: str) -> List[tuple]:
-        """Return violations for a harvested higher-order taxonomy name."""
+        """
+        Return violations for a harvested higher-order taxonomy name.
+
+        Args:
+            text (str): Parsed section text supplied by the caller.
+            proper_name (str): Input value used by this method.
+
+        Returns:
+            List[tuple]: List value produced by this method.
+        """
         violations = []
         name_pattern = re.escape(proper_name).replace(r'\ ', r'\s+')
         pattern = re.compile(
@@ -350,7 +430,17 @@ class FormattingChecker(BaseChecker):
         return violations
     
     def is_inside_italic(self, text: str, start: int, end: int) -> bool:
-        """Check if a position is inside italic tags."""
+        """
+        Check if a position is inside italic tags.
+
+        Args:
+            text (str): Parsed section text supplied by the caller.
+            start (int): Input value used by this method.
+            end (int): Input value used by this method.
+
+        Returns:
+            bool: Boolean result described by the summary line above.
+        """
         before = text[:start]
         after = text[end:]
 

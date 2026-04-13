@@ -6,9 +6,23 @@ from iucn_rules_checker.checkers.bibliography import BibliographyChecker
 
 
 class BibliographyCheckerTests(unittest.TestCase):
-    """Check the current bibliography rules."""
+    """
+    Check the current bibliography rules.
+
+    Purpose:
+        This test case groups regression checks for the current behavior covered by the enclosed tests.
+    """
 
     def test_ampersand_usage_only_runs_in_bibliography_sections(self) -> None:
+        """
+        Test that ampersand usage only runs in bibliography sections.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = BibliographyChecker()
 
         bibliography_violations = checker.check((
@@ -33,6 +47,15 @@ class BibliographyCheckerTests(unittest.TestCase):
         self.assertEqual(body_ampersand_messages, [])
 
     def test_ampersand_usage_only_flags_ampersands_before_first_year(self) -> None:
+        """
+        Test that ampersand usage only flags ampersands before first year.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = BibliographyChecker()
 
         violations = checker.check((
@@ -50,6 +73,15 @@ class BibliographyCheckerTests(unittest.TestCase):
         self.assertEqual(ampersand_violations[0].matched_text, "&")
 
     def test_ampersand_usage_ignores_all_ampersands_after_first_year(self) -> None:
+        """
+        Test that ampersand usage ignores all ampersands after first year.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = BibliographyChecker()
 
         violations = checker.check((
@@ -65,6 +97,15 @@ class BibliographyCheckerTests(unittest.TestCase):
         self.assertEqual(ampersand_violations, [])
 
     def test_bibliography_checker_also_runs_et_al_rule(self) -> None:
+        """
+        Test that bibliography checker also runs et al rule.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = BibliographyChecker()
 
         violations = checker.check((
@@ -78,6 +119,15 @@ class BibliographyCheckerTests(unittest.TestCase):
         self.assertEqual(violations[0].message, "Use italicized 'et al.'")
 
     def test_bibliography_checker_also_runs_range_dash_rule(self) -> None:
+        """
+        Test that bibliography checker also runs range dash rule.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = BibliographyChecker()
 
         violations = checker.check((
@@ -91,6 +141,15 @@ class BibliographyCheckerTests(unittest.TestCase):
         self.assertIn("Use an unspaced en dash", violations[0].message)
 
     def test_bibliography_checker_does_not_run_large_number_rule(self) -> None:
+        """
+        Test that bibliography checker does not run large number rule.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = BibliographyChecker()
 
         violations = checker.check((

@@ -6,9 +6,23 @@ from iucn_rules_checker.checkers.symbols import SymbolChecker
 
 
 class SymbolCheckerTests(unittest.TestCase):
-    """Check the current symbol rules."""
+    """
+    Check the current symbol rules.
+
+    Purpose:
+        This test case groups regression checks for the current behavior covered by the enclosed tests.
+    """
 
     def test_ampersand_usage_flags_literal_ampersands(self) -> None:
+        """
+        Test that ampersand usage flags literal ampersands.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check((
             "Assessment > Rationale [paragraph 1]",
@@ -24,6 +38,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertTrue(all(v.suggested_fix == "and" for v in ampersand_violations))
 
     def test_ampersand_usage_ignores_simple_style_tags(self) -> None:
+        """
+        Test that ampersand usage ignores simple style tags.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check((
             "Assessment > Rationale [paragraph 1]",
@@ -39,6 +62,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(ampersand_violations[0].suggested_fix, "and")
 
     def test_area_units_ignore_simple_style_tags(self) -> None:
+        """
+        Test that area units ignore simple style tags.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check((
             "Assessment > Rationale [paragraph 1]",
@@ -62,6 +94,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertIn("mm²", fixes)
 
     def test_area_units_respect_existing_correct_forms_inside_style_tags(self) -> None:
+        """
+        Test that area units respect existing correct forms inside style tags.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check((
             "Assessment > Rationale [paragraph 1]",
@@ -80,6 +121,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(area_messages, [])
 
     def test_degree_text_ignores_simple_style_tags_and_allows_decimals(self) -> None:
+        """
+        Test that degree text ignores simple style tags and allows decimals.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check_degree_text(
             "Assessment > Rationale [paragraph 1]",
@@ -97,6 +147,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertIn("20.75°C", fixes)
 
     def test_degree_text_skips_existing_correct_decimal_forms(self) -> None:
+        """
+        Test that degree text skips existing correct decimal forms.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check_degree_text(
             "Assessment > Rationale [paragraph 1]",
@@ -111,6 +170,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(degree_messages, [])
 
     def test_degree_symbol_spacing_flags_spacing_around_existing_degree_symbol(self) -> None:
+        """
+        Test that degree symbol spacing flags spacing around existing degree symbol.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check_degree_symbol_spacing(
             "Assessment > Rationale [paragraph 1]",
@@ -128,6 +196,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertIn("12.5°N", fixes)
 
     def test_degree_symbol_spacing_skips_existing_no_space_degree_symbol_forms(self) -> None:
+        """
+        Test that degree symbol spacing skips existing no space degree symbol forms.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check_degree_symbol_spacing(
             "Assessment > Rationale [paragraph 1]",
@@ -142,6 +219,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(spacing_violations, [])
 
     def test_degree_symbol_spacing_skips_range_preceded_shared_unit_forms(self) -> None:
+        """
+        Test that degree symbol spacing skips range preceded shared unit forms.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check_degree_symbol_spacing(
             "Assessment > Rationale [paragraph 1]",
@@ -156,6 +242,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(spacing_violations, [])
 
     def test_percentage_ignores_simple_style_tags_and_allows_decimals(self) -> None:
+        """
+        Test that percentage ignores simple style tags and allows decimals.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check((
             "Assessment > Rationale [paragraph 1]",
@@ -173,6 +268,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertIn("7.25%", fixes)
 
     def test_percentage_skips_existing_percent_symbol_forms(self) -> None:
+        """
+        Test that percentage skips existing percent symbol forms.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check((
             "Assessment > Rationale [paragraph 1]",
@@ -187,6 +291,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(percentage_violations, [])
 
     def test_percentage_symbol_spacing_ignores_simple_style_tags(self) -> None:
+        """
+        Test that percentage symbol spacing ignores simple style tags.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check((
             "Assessment > Rationale [paragraph 1]",
@@ -202,6 +315,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(spacing_violations[0].suggested_fix, "12%")
 
     def test_percentage_symbol_spacing_skips_range_preceded_percent_and_unit_forms(self) -> None:
+        """
+        Test that percentage symbol spacing skips range preceded percent and unit forms.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check_percentage_symbol_spacing(
             "Assessment > Rationale [paragraph 1]",
@@ -217,6 +339,15 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(spacing_violations, [])
 
     def test_unit_spacing_ignores_simple_style_tags(self) -> None:
+        """
+        Test that unit spacing ignores simple style tags.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
         violations = checker.check((
             "Assessment > Rationale [paragraph 1]",

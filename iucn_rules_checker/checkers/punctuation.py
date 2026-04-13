@@ -8,30 +8,45 @@ from .base import BaseChecker
 
 
 class PunctuationChecker(BaseChecker):
-    """Checker enforcing punctuation formatting rules."""
+    """
+    Checker enforcing punctuation formatting rules.
+
+    Purpose:
+        This class groups related rules within the rules-based assessment workflow.
+    """
 
     EN_DASH = "–"
     RANGE_UNITS = (
-        # Distance & Area
+        # Distance and area units.
         "km", "m", "cm", "mm", "ha",
         "km2", "m2", "cm2", "mm2", "ha2",
         "km<sup>2</sup>", "m<sup>2</sup>", "cm<sup>2</sup>", "mm<sup>2</sup>", "ha<sup>2</sup>",
         "sq km", "sqkm", "sq m", "sqm", "sq cm", "sqcm", "sq mm", "sqmm", "sq ha", "sqha",
-        # Volume & Mass
+        # Volume and mass units.
         "km3", "m3", "cm3", "mm3",
         "km<sup>3</sup>", "m<sup>3</sup>", "cm<sup>3</sup>", "mm<sup>3</sup>",
         "l", "ml", "kg", "g", "t",
-        # Elevation & Angles
+        # Elevation and angle units.
         "m asl", "m bsl", "°", "%",
-        # Time (Critical for Generation Length)
+        # Time units that often appear in generation-length wording.
         "yr", "mo", "days",
     )
 
     def __init__(self):
+        """
+        Initialise the punctuation checker.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
         super().__init__()
 
     def check_text(self, section_name: str, text: str) -> List[Violation]:
-        """Run all punctuation checks for one parsed report entry.
+        """
+        Run all punctuation checks for one parsed report entry.
 
         This is just the dispatcher for the punctuation checker. It runs:
         `check_range_dashes(...)`
@@ -41,6 +56,13 @@ class PunctuationChecker(BaseChecker):
 
         It does not deduplicate overlapping findings between those methods; it
         simply concatenates the returned `Violation` lists in that order.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         violations.extend(self.check_range_dashes(section_name, text))
@@ -50,7 +72,8 @@ class PunctuationChecker(BaseChecker):
         return violations
 
     def check_range_dashes(self, section_name: str, text: str) -> List[Violation]:
-        """Ensure numeric ranges use an unspaced en dash.
+        """
+        Ensure numeric ranges use an unspaced en dash.
 
         This method strips italic and bold markers, then looks for a plain
         numeric pair such as `10-20`, `10 - 20`, or `10 – 20`. It rewrites the
@@ -63,6 +86,13 @@ class PunctuationChecker(BaseChecker):
 
         It also skips date-like three-part numeric chains such as
         `2022-08-01`, `08-01-2022`, and `08-2022-01`.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -108,7 +138,17 @@ class PunctuationChecker(BaseChecker):
         return violations
 
     def is_date_like_numeric_chain(self, text: str, start: int, end: int) -> bool:
-        """Return True when a matched pair is part of a three-part hyphenated date."""
+        """
+        Return True when a matched pair is part of a three-part hyphenated date.
+
+        Args:
+            text (str): Parsed section text supplied by the caller.
+            start (int): Input value used by this method.
+            end (int): Input value used by this method.
+
+        Returns:
+            bool: Boolean result described by the summary line above.
+        """
         chain_start = start
         while chain_start > 0 and (
             text[chain_start - 1].isdigit() or text[chain_start - 1] in f"-{self.EN_DASH}"
@@ -134,7 +174,8 @@ class PunctuationChecker(BaseChecker):
         )
 
     def check_for_example_commas(self, section_name: str, text: str) -> List[Violation]:
-        """Ensure `for example` is enclosed by commas when used mid-sentence.
+        """
+        Ensure `for example` is enclosed by commas when used mid-sentence.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then checks the cleaned text
@@ -169,6 +210,13 @@ class PunctuationChecker(BaseChecker):
         It does not ignore simple HTML markup around the phrase, so forms such
         as `<i>for example</i>` can still be matched.
         It may miss split-markup forms such as `for <i>example</i>`.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -237,7 +285,8 @@ class PunctuationChecker(BaseChecker):
         return violations
 
     def check_colon_spacing(self, section_name: str, text: str) -> List[Violation]:
-        """Detect spaces immediately before a colon.
+        """
+        Detect spaces immediately before a colon.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then checks the cleaned text
@@ -260,6 +309,13 @@ class PunctuationChecker(BaseChecker):
         It does not distinguish prose from labels, tables, or copied text.
         It also does not reason about whether the colon itself is appropriate
         punctuation in the sentence.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -283,7 +339,8 @@ class PunctuationChecker(BaseChecker):
         return violations
 
     def check_semicolon_spacing(self, section_name: str, text: str) -> List[Violation]:
-        """Detect spaces immediately before a semicolon.
+        """
+        Detect spaces immediately before a semicolon.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then checks the cleaned text
@@ -306,6 +363,13 @@ class PunctuationChecker(BaseChecker):
         It does not decide whether a semicolon is the right punctuation mark.
         It treats all contexts the same, including prose, labels, and copied
         text.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(

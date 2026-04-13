@@ -8,7 +8,12 @@ from .base import BaseChecker
 
 
 class GeographyChecker(BaseChecker):
-    """Checker for geographic naming conventions (ISO 3166)."""
+    """
+    Checker for geographic naming conventions (ISO 3166).
+
+    Purpose:
+        This class groups related rules within the rules-based assessment workflow.
+    """
 
     ISO_3166_COUNTRIES = {
         'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda',
@@ -112,18 +117,37 @@ class GeographyChecker(BaseChecker):
     }
 
     def __init__(self):
+        """
+        Initialise the geography checker.
+
+        Args:
+            None.
+
+        Returns:
+            None (mutates the recognised-name cache in place).
+        """
         super().__init__()
         self._proper_country_or_region_names = self.ISO_3166_COUNTRIES | self.RECOGNISED_REGIONS
 
     def check_text(self, section_name: str, text: str) -> List[Violation]:
-        """Check for geographic naming violations."""
+        """
+        Check for geographic naming violations.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
+        """
         violations = []
         violations.extend(self.check_country_names(section_name, text))
         violations.extend(self.check_directional_capitalization(section_name, text))
         return violations
 
     def check_country_names(self, section_name: str, text: str) -> List[Violation]:
-        """Check country names against an explicit correction map.
+        """
+        Check country names against an explicit correction map.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then applies the explicit
@@ -152,6 +176,13 @@ class GeographyChecker(BaseChecker):
         exact ISO-style names such as `Viet Nam`, `Myanmar`, `Philippines`
         unknown typos that are not yet present in `COUNTRY_CORRECTIONS`
         arbitrary capitalized phrases that are not in the correction map
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -183,7 +214,16 @@ class GeographyChecker(BaseChecker):
         return violations
 
     def is_within_known_country_or_region(self, text: str, span: tuple[int, int]) -> bool:
-        """Return True when a match sits inside a known ISO country or region name."""
+        """
+        Return True when a match sits inside a known ISO country or region name.
+
+        Args:
+            text (str): Parsed section text supplied by the caller.
+            span (tuple[int, int]): Span tuple supplied by the caller.
+
+        Returns:
+            bool: Boolean result described by the summary line above.
+        """
         start, end = span
         for proper_name in self._proper_country_or_region_names:
             pattern = re.compile(rf'\b{re.escape(proper_name)}\b', re.IGNORECASE)
@@ -195,7 +235,8 @@ class GeographyChecker(BaseChecker):
         return False
 
     def check_directional_capitalization(self, section_name: str, text: str) -> List[Violation]:
-        """Check capitalization of direction-led geographic phrases.
+        """
+        Check capitalization of direction-led geographic phrases.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then applies the directional
@@ -241,6 +282,13 @@ class GeographyChecker(BaseChecker):
         direction words that are not followed by a capitalized geographic phrase
         proper region names not present in `ISO_3166_COUNTRIES`,
         `RECOGNISED_REGIONS`, or the correction-key list
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(

@@ -6,9 +6,23 @@ from iucn_rules_checker.checkers.abbreviations import AbbreviationChecker
 
 
 class AbbreviationCheckerTests(unittest.TestCase):
-    """Check the current latin-abbreviation matching rules."""
+    """
+    Check the current latin-abbreviation matching rules.
+
+    Purpose:
+        This test case groups regression checks for the current behavior covered by the enclosed tests.
+    """
 
     def test_latin_abbreviations_match_common_variants(self) -> None:
+        """
+        Test that latin abbreviations match common variants.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "E.g. this starts a sentence. "
             "Examples occur in running text, e.g. orchids and mosses. "
@@ -35,6 +49,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertTrue(all(v.section_name == "Test Section" for v in violations))
 
     def test_eg_and_ie_and_fixed_formats_ignore_simple_style_tags(self) -> None:
+        """
+        Test that eg and ie and fixed formats ignore simple style tags.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "Styled forms like <i>E</i><i>.g.</i>, <b>I</b><b>.e.</b>, and <sup>eg</sup> should still match. "
             "Fixed forms like <i>etc</i>, <b>in lit</b>, <i>Pers</i> <b>Comm</b>, and <sub>Prof</sub> should also match."
@@ -51,6 +74,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertIn("Use 'Prof.' with period", messages)
 
     def test_abbreviation_formats_are_case_insensitive(self) -> None:
+        """
+        Test that abbreviation formats are case insensitive.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "Lists may end with ETC in notes. "
             "References often cite ET AL without the final period. "
@@ -75,6 +107,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertEqual(messages.count("Use 'pers. obs.' format"), 2)
 
     def test_in_lit_with_period_is_not_flagged(self) -> None:
+        """
+        Test that in lit with period is not flagged.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = "Published sources may be described as in lit. in one note, while another still says in lit without the period."
 
         violations = AbbreviationChecker().check_abbreviation_formats("Test Section", text)
@@ -83,6 +124,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertEqual(matched_texts.count("in lit"), 1)
 
     def test_et_al_requires_italicized_canonical_form(self) -> None:
+        """
+        Test that et al requires italicized canonical form.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "References may cite et al in plain text. "
             "Plain-text usage such as et al. is still wrong here. "
@@ -100,6 +150,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertEqual(messages.count(combined_et_al), 4)
 
     def test_et_al_checks_italicization_on_letters_only_not_trailing_period(self) -> None:
+        """
+        Test that et al checks italicization on letters only not trailing period.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = "This citation uses <i>et al</i>. correctly."
 
         violations = AbbreviationChecker().check(("Test Section", text))
@@ -108,6 +167,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertNotIn("Use italicized 'et al.'", messages)
 
     def test_latin_terms_strip_non_italic_style_markers_but_preserve_italics(self) -> None:
+        """
+        Test that latin terms strip non italic style markers but preserve italics.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "Field notes mention <b>in situ</b> in bold plain text. "
             "One citation uses <b><i>et al</i></b> without the final period. "
@@ -132,6 +200,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         )
 
     def test_latin_terms_check_periods_and_missing_italics(self) -> None:
+        """
+        Test that latin terms check periods and missing italics.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "Conservation may happen in situ and <i>ex situ</i>. "
             "Some drafts still write in. situ. or sensu. lato. "
@@ -154,6 +231,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertEqual(messages.count(combined_in_situ), 2)
 
     def test_title_abbreviations_cover_dr_mr_mrs_and_ms(self) -> None:
+        """
+        Test that title abbreviations cover Dr Mr Mrs and Ms.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "Dr. Green met Mr. Brown. "
             "Later, Mrs. White and Ms. Black joined the survey."
@@ -168,6 +254,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertIn("Use 'Ms' without period (UK style)", messages)
 
     def test_title_abbreviations_ignore_all_simple_style_markers(self) -> None:
+        """
+        Test that title abbreviations ignore all simple style markers.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "<b>Dr.</b> Green met <i>Mr.</i> Brown. "
             "Later, <sup>Mrs.</sup> White and <sub>Ms.</sub> Black joined."
@@ -182,6 +277,15 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertIn("Use 'Ms' without period (UK style)", messages)
 
     def test_violation_section_name_hides_paragraph_suffix_only(self) -> None:
+        """
+        Test that violation section name hides paragraph suffix only.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = AbbreviationChecker()
 
         paragraph_violations = checker.check((

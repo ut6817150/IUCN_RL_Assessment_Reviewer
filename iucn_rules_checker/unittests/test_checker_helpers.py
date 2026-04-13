@@ -17,9 +17,23 @@ from iucn_rules_checker.checkers.symbols import SymbolChecker
 
 
 class CheckerHelperTests(unittest.TestCase):
-    """Exercise helper methods and direct per-rule methods explicitly."""
+    """
+    Exercise helper methods and direct per-rule methods explicitly.
+
+    Purpose:
+        This test case groups regression checks for the current behavior covered by the enclosed tests.
+    """
 
     def test_abbreviation_helper_methods_and_direct_rules(self) -> None:
+        """
+        Test that abbreviation helper methods and direct rules.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = AbbreviationChecker()
 
         italic_text = "Use <i>et al</i>. and <i>in situ</i>."
@@ -48,6 +62,15 @@ class CheckerHelperTests(unittest.TestCase):
         )
 
     def test_date_helper_methods_and_direct_rules(self) -> None:
+        """
+        Test that date helper methods and direct rules.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = DateChecker()
 
         self.assertEqual(checker.normalize_month_token("Sept."), "sept")
@@ -68,6 +91,15 @@ class CheckerHelperTests(unittest.TestCase):
         )
 
     def test_formatting_helper_methods_and_state_reset(self) -> None:
+        """
+        Test that formatting helper methods and state reset.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = FormattingChecker()
 
         self.assertTrue(
@@ -97,6 +129,15 @@ class CheckerHelperTests(unittest.TestCase):
         self.assertEqual(checker._collected_higher_taxonomy_names, set())
 
     def test_geography_helper_methods_and_direct_rules(self) -> None:
+        """
+        Test that geography helper methods and direct rules.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = GeographyChecker()
 
         self.assertTrue(checker.is_within_known_country_or_region("North America", (0, 5)))
@@ -125,6 +166,15 @@ class CheckerHelperTests(unittest.TestCase):
         )
 
     def test_iucn_terms_direct_rule_methods(self) -> None:
+        """
+        Test that IUCN terms direct rule methods.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = IUCNTermsChecker()
 
         self.assertEqual(len(checker.check_the_iucn("Test Section", "the IUCN guidance")), 1)
@@ -151,6 +201,15 @@ class CheckerHelperTests(unittest.TestCase):
         self.assertEqual(len(threatened_violations), 1)
 
     def test_number_helper_methods_and_direct_rules(self) -> None:
+        """
+        Test that number helper methods and direct rules.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = NumberChecker()
 
         self.assertTrue(checker.should_exclude_small_number("3 May", 0, 1))
@@ -179,6 +238,15 @@ class CheckerHelperTests(unittest.TestCase):
         self.assertEqual(checker.format_large_number(3_000_000_000, 1_000_000_000, "billion"), "3 billion")
 
     def test_punctuation_helper_methods_and_direct_rules(self) -> None:
+        """
+        Test that punctuation helper methods and direct rules.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = PunctuationChecker()
 
         self.assertTrue(checker.is_date_like_numeric_chain("2022-08-01", 0, 7))
@@ -188,6 +256,15 @@ class CheckerHelperTests(unittest.TestCase):
         self.assertEqual(len(checker.check_semicolon_spacing("Test Section", "Peru ; Ecuador")), 1)
 
     def test_reference_and_scientific_direct_rule_methods(self) -> None:
+        """
+        Test that reference and scientific direct rule methods.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         reference_checker = ReferenceChecker()
         scientific_checker = ScientificNameChecker()
 
@@ -206,6 +283,15 @@ class CheckerHelperTests(unittest.TestCase):
         self.assertEqual({violation.suggested_fix for violation in species_violations}, {"sp.", "spp."})
 
     def test_spelling_helper_method(self) -> None:
+        """
+        Test that spelling helper method.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SpellingChecker()
 
         self.assertEqual(checker.apply_case_pattern("colour", "color"), "colour")
@@ -213,6 +299,15 @@ class CheckerHelperTests(unittest.TestCase):
         self.assertEqual(checker.apply_case_pattern("colour", "COLOR"), "COLOUR")
 
     def test_symbol_helper_methods_and_direct_rules(self) -> None:
+        """
+        Test that symbol helper methods and direct rules.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = SymbolChecker()
 
         range_text = "Temperature ranged from 14–26 °C."
@@ -229,6 +324,15 @@ class CheckerHelperTests(unittest.TestCase):
         )
 
     def test_bibliography_direct_methods_and_lifecycle(self) -> None:
+        """
+        Test that bibliography direct methods and lifecycle.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = BibliographyChecker()
         checker.begin_sweep()
         checker.end_sweep()

@@ -6,9 +6,23 @@ from iucn_rules_checker.assessment_parser import AssessmentParser
 
 
 class AssessmentParserTests(unittest.TestCase):
-    """Lock in the parser's current block-by-block behavior."""
+    """
+    Lock in the parser's current block-by-block behavior.
+
+    Purpose:
+        This test case groups regression checks for the current behavior covered by the enclosed tests.
+    """
 
     def test_parse_returns_block_level_full_report(self) -> None:
+        """
+        Test that parse returns block level full report.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         assessment = {
             "title": "Sample Assessment",
             "blocks": [
@@ -116,6 +130,15 @@ class AssessmentParserTests(unittest.TestCase):
         self.assertFalse(any("-&gt;" in value for value in full_report.values()))
 
     def test_parse_uses_rich_block_fields_only(self) -> None:
+        """
+        Test that parse uses rich block fields only.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         assessment = {
             "title": "Root",
             "blocks": [
@@ -149,6 +172,15 @@ class AssessmentParserTests(unittest.TestCase):
         self.assertNotIn("Root [table 2] [row 1]", full_report)
 
     def test_parse_ignores_style_blocks(self) -> None:
+        """
+        Test that parse ignores style blocks.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         assessment = {
             "title": "Root",
             "blocks": [
@@ -172,6 +204,15 @@ class AssessmentParserTests(unittest.TestCase):
         self.assertEqual(full_report["Root [paragraph 1]"], "Draft")
 
     def test_parse_preserves_non_ascii_characters_as_is(self) -> None:
+        """
+        Test that parse preserves non ASCII characters as is.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         assessment = {
             "title": "Région – Root",
             "blocks": [
@@ -202,6 +243,15 @@ class AssessmentParserTests(unittest.TestCase):
         )
 
     def test_parse_normalizes_non_breaking_spaces_to_regular_spaces(self) -> None:
+        """
+        Test that parse normalizes non breaking spaces to regular spaces.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         assessment = {
             "title": "Root\u00A0Title",
             "blocks": [

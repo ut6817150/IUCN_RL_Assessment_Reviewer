@@ -6,9 +6,23 @@ from iucn_rules_checker.checkers.geography import GeographyChecker
 
 
 class GeographyCheckerTests(unittest.TestCase):
-    """Check the current ISO-country correction behavior."""
+    """
+    Check the current ISO-country correction behavior.
+
+    Purpose:
+        This test case groups regression checks for the current behavior covered by the enclosed tests.
+    """
 
     def test_country_names_match_known_non_preferred_forms(self) -> None:
+        """
+        Test that country names match known non preferred forms.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The species occurs in Vietnam and Laos. "
             "Older records also mention Burma and Holland."
@@ -23,6 +37,15 @@ class GeographyCheckerTests(unittest.TestCase):
         self.assertIn("Use ISO 3166 country name: 'Netherlands' instead of 'Holland'", messages)
 
     def test_country_names_catch_common_misspellings_in_geographic_context(self) -> None:
+        """
+        Test that country names catch common misspellings in geographic context.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The species was found in Afganistan. "
             "It was later recorded from Argetina and distributed in Phillipines."
@@ -36,6 +59,15 @@ class GeographyCheckerTests(unittest.TestCase):
         self.assertIn("Use ISO 3166 country name: 'Philippines' instead of 'Phillipines'", messages)
 
     def test_exact_iso_country_names_are_not_flagged(self) -> None:
+        """
+        Test that exact iso country names are not flagged.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The species is found in Afghanistan, Argentina, Viet Nam, and Timor-Leste. "
             "It also occurs in the Republic of the Congo."
@@ -46,6 +78,15 @@ class GeographyCheckerTests(unittest.TestCase):
         self.assertEqual(violations, [])
 
     def test_country_names_strip_simple_style_markers_before_matching(self) -> None:
+        """
+        Test that country names strip simple style markers before matching.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The species occurs in <b>Viet</b><i>nam</i>. "
             "Older records also mention <sup>La</sup><sub>os</sub>."
@@ -58,6 +99,15 @@ class GeographyCheckerTests(unittest.TestCase):
         self.assertIn("Use ISO 3166 country name: 'Lao PDR' instead of 'Laos'", messages)
 
     def test_directional_capitalization_flags_non_region_direction_phrases(self) -> None:
+        """
+        Test that directional capitalization flags non region direction phrases.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The species occurs in Eastern Ecuador and Northern Peru. "
             "It is also found across Western Colombia."
@@ -71,6 +121,15 @@ class GeographyCheckerTests(unittest.TestCase):
         self.assertIn("'Western Colombia' should be lower case (unless it is a proper region name)", messages)
 
     def test_directional_capitalization_skips_iso_countries_and_recognised_regions(self) -> None:
+        """
+        Test that directional capitalization skips iso countries and recognised regions.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The review mentions North Korea, South Africa, North America, East Asia, "
             "South & Southeast Asia, and West & Central Asia."
@@ -85,6 +144,15 @@ class GeographyCheckerTests(unittest.TestCase):
         self.assertEqual(direction_messages, [])
 
     def test_directional_capitalization_strips_simple_style_markers_before_matching(self) -> None:
+        """
+        Test that directional capitalization strips simple style markers before matching.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The species occurs in <b>East</b><i>ern</i> Ecuador. "
             "It is also found in <i>North</i> America."
@@ -97,6 +165,15 @@ class GeographyCheckerTests(unittest.TestCase):
         self.assertNotIn("'North America' should be lower case (unless it is a proper region name)", messages)
 
     def test_directional_capitalization_ignores_paragraph_start_and_after_period_space(self) -> None:
+        """
+        Test that directional capitalization ignores paragraph start and after period space.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "Eastern Ecuador contains suitable habitat. "
             "This changed. Northern Peru still contains suitable habitat."

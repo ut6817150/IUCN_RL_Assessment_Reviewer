@@ -6,9 +6,23 @@ from iucn_rules_checker.checkers.formatting import FormattingChecker
 
 
 class FormattingCheckerTests(unittest.TestCase):
-    """Check the current capitalization rules for spelled-out EOO/AOO terms."""
+    """
+    Check the current capitalization rules for spelled-out EOO/AOO terms.
+
+    Purpose:
+        This test case groups regression checks for the current behavior covered by the enclosed tests.
+    """
 
     def test_eoo_aoo_capitalization_catches_partial_caps_and_punctuation_positions(self) -> None:
+        """
+        Test that EOO AOO capitalization catches partial caps and punctuation positions.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The Extent of Occurrence is restricted. "
             "Area of Occupancy is also small. "
@@ -37,6 +51,15 @@ class FormattingCheckerTests(unittest.TestCase):
         )
 
     def test_eoo_aoo_capitalization_allows_sentence_start_after_period_question_colon_and_paragraph_start(self) -> None:
+        """
+        Test that EOO AOO capitalization allows sentence start after period question colon and paragraph start.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "Extent of occurrence remained restricted. "
             "Area of occupancy stayed small. "
@@ -50,6 +73,15 @@ class FormattingCheckerTests(unittest.TestCase):
         self.assertEqual(violations, [])
 
     def test_eoo_aoo_capitalization_flags_first_word_caps_outside_period_space_exception(self) -> None:
+        """
+        Test that EOO AOO capitalization flags first word caps outside period space exception.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The Extent of occurrence remained restricted. "
             "Summary, Area of occupancy was recalculated. "
@@ -70,6 +102,15 @@ class FormattingCheckerTests(unittest.TestCase):
         )
 
     def test_eoo_aoo_capitalization_ignores_simple_style_tags(self) -> None:
+        """
+        Test that EOO AOO capitalization ignores simple style tags.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         text = (
             "The <b>Extent of occurrence</b> remained restricted. "
             "This was revised. <i>Extent of occurrence</i> remained restricted. "
@@ -91,6 +132,15 @@ class FormattingCheckerTests(unittest.TestCase):
         )
 
     def test_higher_order_taxonomy_formatting_ignores_non_harvested_family_like_names(self) -> None:
+        """
+        Test that higher order taxonomy formatting ignores non harvested family like names.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = FormattingChecker()
         text = (
             "orchidaceae is mentioned in plain text. "
@@ -102,6 +152,15 @@ class FormattingCheckerTests(unittest.TestCase):
         self.assertEqual(violations, [])
 
     def test_higher_order_taxonomy_formatting_strips_non_italic_style_markers(self) -> None:
+        """
+        Test that higher order taxonomy formatting strips non italic style markers.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = FormattingChecker()
         checker.begin_sweep()
         try:
@@ -137,6 +196,15 @@ class FormattingCheckerTests(unittest.TestCase):
             checker.end_sweep()
 
     def test_higher_order_taxonomy_formatting_harvests_names_from_ladder_entry(self) -> None:
+        """
+        Test that higher order taxonomy formatting harvests names from ladder entry.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = FormattingChecker()
         checker.begin_sweep()
         try:
@@ -176,6 +244,15 @@ class FormattingCheckerTests(unittest.TestCase):
         self.assertEqual(cleared_violations, [])
 
     def test_genus_and_species_rule_harvests_from_ladder_and_checks_italics_and_case(self) -> None:
+        """
+        Test that genus and species rule harvests from ladder and checks italics and case.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = FormattingChecker()
         checker.begin_sweep()
         try:
@@ -221,6 +298,15 @@ class FormattingCheckerTests(unittest.TestCase):
         self.assertEqual(cleared_violations, [])
 
     def test_genus_and_species_rule_strips_non_italic_style_markers(self) -> None:
+        """
+        Test that genus and species rule strips non italic style markers.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = FormattingChecker()
         checker.begin_sweep()
         try:
@@ -252,6 +338,15 @@ class FormattingCheckerTests(unittest.TestCase):
             checker.end_sweep()
 
     def test_genus_and_species_rule_allows_words_inside_one_italicized_binomial(self) -> None:
+        """
+        Test that genus and species rule allows words inside one italicized binomial.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
         checker = FormattingChecker()
         checker.begin_sweep()
         try:

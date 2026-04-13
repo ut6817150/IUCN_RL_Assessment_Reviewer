@@ -10,25 +10,69 @@ from .punctuation import PunctuationChecker
 
 
 class BibliographyChecker(BaseChecker):
-    """Checker for bibliography-specific formatting rules."""
+    """
+    Checker for bibliography-specific formatting rules.
+
+    Purpose:
+        This class groups related rules within the rules-based assessment workflow.
+    """
 
     def __init__(self):
+        """
+        Initialise bibliography-specific helper checkers.
+
+        Args:
+            None.
+
+        Returns:
+            None (mutates helper checker attributes in place).
+
+        Notes:
+            ``BibliographyChecker`` reuses focused abbreviation and punctuation
+            rules so bibliography sections can be checked without running the
+            entire non-bibliography checker pipeline.
+        """
         super().__init__()
         self.abbreviation_checker = AbbreviationChecker()
         self.punctuation_checker = PunctuationChecker()
 
     def begin_sweep(self) -> None:
-        """Prepare helper checkers before reviewing a full report."""
+        """
+        Prepare helper checkers before reviewing a full report.
+
+        Args:
+            None.
+
+        Returns:
+            None: Value produced by this method.
+        """
         self.abbreviation_checker.begin_sweep()
         self.punctuation_checker.begin_sweep()
 
     def end_sweep(self) -> None:
-        """Clear helper checker state after reviewing a full report."""
+        """
+        Clear helper checker state after reviewing a full report.
+
+        Args:
+            None.
+
+        Returns:
+            None: Value produced by this method.
+        """
         self.abbreviation_checker.end_sweep()
         self.punctuation_checker.end_sweep()
 
     def check_text(self, section_name: str, text: str) -> List[Violation]:
-        """Check for bibliography formatting violations."""
+        """
+        Check for bibliography formatting violations.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
+        """
         if "bibliography" not in section_name.lower():
             return []
 
@@ -39,7 +83,8 @@ class BibliographyChecker(BaseChecker):
         return violations
 
     def check_ampersand_usage(self, section_name: str, text: str) -> List[Violation]:
-        """Flag `&` in bibliography author text and suggest `and`.
+        """
+        Flag `&` in bibliography author text and suggest `and`.
 
         This rule only runs when `section_name` contains `Bibliography`
         (case-insensitive). In those sections, it first clips the cleaned text
@@ -68,6 +113,13 @@ class BibliographyChecker(BaseChecker):
         intentionally ignored.
         It does not infer that some other word or symbol should become `and`
         unless an actual `&` character is present.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         if "bibliography" not in section_name.lower():

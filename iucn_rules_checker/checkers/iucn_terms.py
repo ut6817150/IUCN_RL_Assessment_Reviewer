@@ -8,7 +8,12 @@ from .base import BaseChecker
 
 
 class IUCNTermsChecker(BaseChecker):
-    """Checker for IUCN-specific terminology and formatting."""
+    """
+    Checker for IUCN-specific terminology and formatting.
+
+    Purpose:
+        This class groups related rules within the rules-based assessment workflow.
+    """
 
     CATEGORIES = [
         ('Critically Endangered', 'CR'),
@@ -23,10 +28,28 @@ class IUCNTermsChecker(BaseChecker):
     ]
 
     def __init__(self):
+        """
+        Initialise the IUCN terminology checker.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+        """
         super().__init__()
 
     def check_text(self, section_name: str, text: str) -> List[Violation]:
-        """Check for IUCN terminology violations."""
+        """
+        Check for IUCN terminology violations.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
+        """
         violations = []
         violations.extend(self.check_the_iucn(section_name, text))
         violations.extend(self.check_CE_abbreviation(section_name, text))
@@ -36,7 +59,8 @@ class IUCNTermsChecker(BaseChecker):
         return violations
 
     def check_the_iucn(self, section_name: str, text: str) -> List[Violation]:
-        """Check for the non-preferred phrase ``the IUCN``.
+        """
+        Check for the non-preferred phrase ``the IUCN``.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then checks the cleaned text
@@ -58,6 +82,13 @@ class IUCNTermsChecker(BaseChecker):
 
         This is a simple style rule only. It does not rewrite surrounding
         grammar or treat quotations and citations differently.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -81,7 +112,8 @@ class IUCNTermsChecker(BaseChecker):
         return violations
 
     def check_CE_abbreviation(self, section_name: str, text: str) -> List[Violation]:
-        """Check the incorrect Red List abbreviation ``CE``.
+        """
+        Check the incorrect Red List abbreviation ``CE``.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then checks the cleaned text
@@ -101,6 +133,13 @@ class IUCNTermsChecker(BaseChecker):
         `concern`
         `species`
         any longer word that merely contains the letters `ce`
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -124,7 +163,8 @@ class IUCNTermsChecker(BaseChecker):
         return violations
 
     def check_category_full_name_capitalization(self, section_name: str, text: str) -> List[Violation]:
-        """Check canonical case for Red List category full names.
+        """
+        Check canonical case for Red List category full names.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then checks the cleaned text
@@ -152,6 +192,13 @@ class IUCNTermsChecker(BaseChecker):
         Examples:
         `<i>critically</i> <b>endangered</b>` is still flagged
         `<i>Critically</i> <b>Endangered</b>` is not flagged
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -193,7 +240,8 @@ class IUCNTermsChecker(BaseChecker):
         return violations
 
     def check_category_abbreviation_capitalization(self, section_name: str, text: str) -> List[Violation]:
-        """Check canonical case for Red List category abbreviations.
+        """
+        Check canonical case for Red List category abbreviations.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then checks the cleaned text
@@ -230,6 +278,13 @@ class IUCNTermsChecker(BaseChecker):
         `<i>cr</i>` is still flagged
         `<b>Vu</b>` is still flagged
         `<i>CR</i>` is not flagged because the abbreviation case is already correct
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -263,7 +318,8 @@ class IUCNTermsChecker(BaseChecker):
         return violations
 
     def check_threatened_case(self, section_name: str, text: str) -> List[Violation]:
-        """Check mid-sentence capitalization of ``Threatened``.
+        """
+        Check mid-sentence capitalization of ``Threatened``.
 
         This method first strips simple inline style markers such as italics,
         bold, superscript, and subscript tags, then looks for the capitalized
@@ -287,6 +343,13 @@ class IUCNTermsChecker(BaseChecker):
 
         This is a narrow regex rule rather than a context-aware parser.
         It skips the `Threatened` part of the category phrase `Near Threatened`.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+            text (str): Parsed section text supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(

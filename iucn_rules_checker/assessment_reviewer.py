@@ -36,9 +36,27 @@ except ImportError:  # pragma: no cover - direct script execution fallback
 
 
 class IUCNAssessmentReviewer:
-    """Review parsed assessment sections and return rule violations."""
+    """
+    Review parsed assessment sections and return rule violations.
+
+    Purpose:
+        This class coordinates the configured checker pipeline across a parsed assessment report.
+    """
 
     def __init__(self):
+        """
+        Initialise the bibliography-only checker and the standard checker pipeline.
+
+        Args:
+            None.
+
+        Returns:
+            None (mutates ``self.bibliography_checker`` and ``self.checkers``).
+
+        Notes:
+            Bibliography sections are reviewed separately so they can run a
+            smaller, bibliography-focused rule set than the rest of the report.
+        """
         self.bibliography_checker = BibliographyChecker()
         self.checkers: List[BaseChecker] = [
             AbbreviationChecker(),
@@ -55,15 +73,39 @@ class IUCNAssessmentReviewer:
         ]
 
     def is_table_section(self, section_name: str) -> bool:
-        """Return True when a parsed section key represents table-derived content."""
+        """
+        Return True when a parsed section key represents table-derived content.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+
+        Returns:
+            bool: Boolean result described by the summary line above.
+        """
         return re.search(r"\[table\s+\d+\]", section_name, re.IGNORECASE) is not None
 
     def is_bibliography_section(self, section_name: str) -> bool:
-        """Return True when a parsed section key represents bibliography content."""
+        """
+        Return True when a parsed section key represents bibliography content.
+
+        Args:
+            section_name (str): Parsed section key supplied by the caller.
+
+        Returns:
+            bool: Boolean result described by the summary line above.
+        """
         return "bibliography" in section_name.lower()
 
     def review_full_report(self, full_report: Dict[str, str]) -> List[Violation]:
-        """Apply each rule to each ``section -> text`` pair in the parsed report."""
+        """
+        Apply each rule to each ``section -> text`` pair in the parsed report.
+
+        Args:
+            full_report (Dict[str, str]): Parsed ``section -> text`` mapping supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
+        """
         if not isinstance(full_report, dict):
             raise TypeError("review_full_report() expects a dict of section paths to text.")
 
@@ -95,7 +137,15 @@ class IUCNAssessmentReviewer:
         return violations
 
     def clean_up_violations(self, violations: List[Violation]) -> List[Violation]:
-        """Strip simple inline style tags from violation text fields."""
+        """
+        Strip simple inline style tags from violation text fields.
+
+        Args:
+            violations (List[Violation]): Violation list supplied by the caller.
+
+        Returns:
+            List[Violation]: Violations produced by this method.
+        """
         style_pattern = re.compile(
             r"</?(?:i|em|b|strong|sup|sub)>",
             re.IGNORECASE,
