@@ -217,12 +217,18 @@ class GeographyChecker(BaseChecker):
         If the phrase is not one of those allowed names, the method assumes
         the direction should be lowercase and suggests that form.
 
+        There are two explicit sentence-position exceptions:
+        - if the matched phrase appears at the start of the paragraph
+        - if the cleaned text immediately before it ends with ``. ``
+
         Examples flagged:
         `Eastern Ecuador` -> suggests `eastern Ecuador`
         `Northern Peru` -> suggests `northern Peru`
         `Western Colombia` -> suggests `western Colombia`
 
         Examples not flagged:
+        paragraph-start `Eastern Ecuador contains...`
+        `This changed. Eastern Ecuador contains...`
         `North Korea`
         `South Africa`
         `North America`
@@ -257,6 +263,8 @@ class GeographyChecker(BaseChecker):
 
         for match in pattern.finditer(cleaned_text):
             matched_phrase = match.group(0)
+            if match.start() == 0 or cleaned_text[:match.start()].endswith(". "):
+                continue
             if matched_phrase.lower() in allowed_phrases:
                 continue
 

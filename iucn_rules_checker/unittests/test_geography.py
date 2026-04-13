@@ -96,6 +96,20 @@ class GeographyCheckerTests(unittest.TestCase):
         self.assertIn("'Eastern Ecuador' should be lower case (unless it is a proper region name)", messages)
         self.assertNotIn("'North America' should be lower case (unless it is a proper region name)", messages)
 
+    def test_directional_capitalization_ignores_paragraph_start_and_after_period_space(self) -> None:
+        text = (
+            "Eastern Ecuador contains suitable habitat. "
+            "This changed. Northern Peru still contains suitable habitat."
+        )
+
+        violations = GeographyChecker().check(("Test Section", text))
+        direction_messages = [
+            violation.message for violation in violations
+            if "should be lower case" in violation.message
+        ]
+
+        self.assertEqual(direction_messages, [])
+
 
 if __name__ == "__main__":
     unittest.main()

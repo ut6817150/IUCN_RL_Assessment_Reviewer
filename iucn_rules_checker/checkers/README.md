@@ -425,7 +425,7 @@ Detailed coverage:
 
 - `check_directional_capitalization(...)`
   How it works:
-  strips all simple style markers, then looks for capitalized direction-led phrases such as `Eastern Ecuador` and compares the full phrase against an allowlist built from ISO country names, recognized regions, and correction-key phrases. If the phrase is not allowed, it suggests lowercasing the direction word.
+  strips all simple style markers, then looks for capitalized direction-led phrases such as `Eastern Ecuador` and compares the full phrase against an allowlist built from ISO country names, recognized regions, and correction-key phrases. If the phrase is not allowed, it suggests lowercasing the direction word. Paragraph-start uses and uses immediately after `. ` are skipped.
   Hard-coded list dependency:
   allowed phrases come from the hard-coded `ISO_3166_COUNTRIES`, `RECOGNISED_REGIONS`, and correction-key lists.
 
@@ -435,6 +435,8 @@ Detailed coverage:
     - `Western Colombia` -> `western Colombia`
 
   - Misses:
+    - paragraph-start `Eastern Ecuador contains...`
+    - `This changed. Northern Peru contains...`
     - proper names such as `North Korea`, `South Africa`, `North America`, `East Asia`, `West & Central Asia`
     - already-lowercase forms such as `eastern Ecuador`
     - proper region names that are not in the checker's allowlists
