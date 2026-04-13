@@ -22,7 +22,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from preprocessing.assessment_processor import parse_dict
+from preprocessing.assessment_processor import parse_to_dict
 
 from iucn_rules_checker.assessment_parser import AssessmentParser
 from iucn_rules_checker.assessment_reviewer import IUCNAssessmentReviewer
@@ -41,8 +41,10 @@ from simplified_llm_api_script.llm_checker_v2 import review_document
 
 from app_helpers import build_downloadable_feedback_excel
 
+# Get openrouter key from environment variables
 OPENROUTER_API_KEY = os.getenv("OR_TOKEN")
 
+# API config for RAG chat
 RAG_LLM_CONFIG = {
     "base_url": "https://openrouter.ai/api/v1",
     "model": "openai/gpt-oss-120b:free",
@@ -50,6 +52,7 @@ RAG_LLM_CONFIG = {
     "reasoning_enabled": True,
 }
 
+# API keys for LLM feedback
 LLM_TAB_CONFIGS = {
     "GPT OSS 120b (free and zero data retention)": {
         "base_url": "https://openrouter.ai/api/v1/chat/completions",
@@ -65,6 +68,7 @@ LLM_TAB_CONFIGS = {
     },
 }
 
+# Initialise UI for document upload
 st.set_page_config(page_title="IUCN Assessment Feedback Tool", layout="wide")
 st.title("IUCN Assessment Feedback Tool")
 st.caption(
@@ -72,6 +76,7 @@ st.caption(
     "from the tabs below."
 )
 
+# Initialise session state
 if "uploaded_file_signature" not in st.session_state:
     st.session_state["uploaded_file_signature"] = None
 if "rules_feedback" not in st.session_state:
@@ -82,6 +87,7 @@ if "llm_feedback" not in st.session_state:
 # The RAG helper manages a larger set of session-state keys used by the chat UI.
 init_rag_session_state(st.session_state)
 
+# Initialise UI document upload widget
 uploaded = st.file_uploader(
     "Upload a .docx, .html or .htm file",
     type=["docx", "html", "doc"],
@@ -93,17 +99,22 @@ uploaded_name = ""
 file_signature = None
 input_ready = False
 
+# Manage file upload
 if uploaded:
     uploaded_name = uploaded.name
     uploaded_ext = Path(uploaded.name).suffix.lower()
     file_signature = f"{uploaded.name}:{len(uploaded.getbuffer())}"
 
+    # IF a .doc file is uploaded, request reupload with custom message
     if uploaded_ext == ".doc":
         st.error(
             "The feedback tool only supports .docx files. Please convert .doc to .docx and re-upload. Or, upload a HTML file."
         )
+    # If any other file format is uploaded, request reupload in the compatible formats
     elif uploaded_ext not in [".docx", ".html"]:
         st.error("The feedback tool only supports .docx or HTML files.")
+
+    # Reset cached tab outputs whenever the uploaded file changes.
     elif uploaded_ext == ".docx" or uploaded_ext == ".html":
         tmp_dir = Path(tempfile.mkdtemp(prefix="upload_"))
         safe_name = Path(uploaded.name).name
@@ -120,19 +131,23 @@ if st.session_state["uploaded_file_signature"] != file_signature:
 
 sync_rag_state_with_upload(st.session_state, file_signature)
 
+# Set state to enable feedback systems upon file upload
 if uploaded is None:
     st.info("Upload a file to enable both feedback systems.")
 elif tmp_path is not None:
     input_ready = True
 
+# Initialise feedback and download tabs
 rules_tab, llm_tab, rag_tab, download_tab = st.tabs(
     ["Rules-based feedback", "LLM feedback", "RAG chat (prototype)", "Download feedback"]
 )
 
+# Design of the rules tab
 with rules_tab:
     st.subheader("Rules-based feedback")
     st.write("Run the deterministic checker suite on the uploaded assessment.")
 
+    # Only generate feedback when the user clicks the generate feedback button on UI
     if st.button(
         "Generate feedback",
         key="generate_rules_feedback",
@@ -140,7 +155,9 @@ with rules_tab:
         disabled=not input_ready,
     ):
         with st.spinner("Generating rules-based feedback..."):
-            assessment = parse_dict(str(tmp_path))
+
+            # Parse document and generate feedback
+            assessment = parse_to_dict(str(tmp_path))
             parser = AssessmentParser()
             reviewer = IUCNAssessmentReviewer()
             full_report = parser.parse(assessment)
@@ -174,14 +191,18 @@ with rules_tab:
                 if section_name not in ordered_grouped_violations:
                     ordered_grouped_violations[section_name] = rows
 
+            # Save rules based system output in session state 
             st.session_state["rules_feedback"] = {
                 "violations": cleaned_violations_dicts,
                 "raw_violations": raw_violations_dicts,
                 "grouped_violations": ordered_grouped_violations,
             }
 
+    # UI display: pompt user to generate feedback if there is no rules based feedback
     if st.session_state["rules_feedback"] is None:
         st.info("Click `Generate feedback` in this tab to run the rules-based reviewer.")
+    
+    # UI display: if rules based feedbck has been generated, display output on UI
     else:
         feedback = st.session_state["rules_feedback"]
         cleaned_violations_dicts = feedback["violations"]
@@ -217,6 +238,7 @@ with rules_tab:
                 with st.expander(f"{section_name} ({len(rows)} {error_label})", expanded=False):
                     st.dataframe(table, use_container_width=True, hide_index=True)
 
+            # enable download of raw violations for debugging
             st.download_button(
                 label="Download rules feedback (JSON)",
                 data=json.dumps(
@@ -228,9 +250,12 @@ with rules_tab:
                 mime="application/json",
             )
 
+# Design of the LLM feedback tab
 with llm_tab:
     st.subheader("LLM feedback")
     st.write("Run the simplified LLM reviewer separately from the rules-based checks.")
+
+    # Let the user choose which model powers the LLM review.
     selected_llm_label = st.selectbox(
         "Choose LLM",
         options=list(LLM_TAB_CONFIGS.keys()),
@@ -242,7 +267,8 @@ with llm_tab:
         f"Selected config: OpenRouter model `{selected_llm_config['model']}` "
         f"with reasoning `{'on' if selected_llm_config['reasoning_enabled'] else 'off'}`."
     )
-
+    
+    # Only generate feedback when the user clicks the generate feedback button on UI
     if st.button(
         "Generate feedback",
         key="generate_llm_feedback",
@@ -250,21 +276,27 @@ with llm_tab:
         disabled=not input_ready,
     ):
         with st.spinner("Generating LLM feedback..."):
-            assessment = parse_dict(str(tmp_path))
+            # Convert the uploaded document once, then pass the parsed
+            # assessment dictionary into the LLM workflow.
+            assessment = parse_to_dict(str(tmp_path))
             llm_results = []
             llm_error = None
 
             try:
+                # Build the configured provider and run the sequential rule prompts.
                 provider = provider_from_config(selected_llm_config)
                 llm_results = asyncio.run(
                     review_document(assessment, provider=provider, mode="sequential")
                 )
             except ReviewDocumentError as exc:
+                # Preserve any partial results returned before the workflow failed.
                 llm_error = str(exc)
                 llm_results = exc.results
             except Exception as exc:
                 llm_error = str(exc)
 
+            # Store a JSON-serialisable version of the results so the tab can
+            # re-render and the download tab can reuse the same payload.
             st.session_state["llm_feedback"] = {
                 "status": "success" if llm_error is None else "error",
                 "model_label": selected_llm_label,
@@ -291,6 +323,8 @@ with llm_tab:
         if not feedback.get("llm_results"):
             st.info("No LLM rule results were returned.")
 
+        # Render one expander per prompt rule so the UI mirrors the structure
+        # of the underlying LLM review workflow.
         for llm_result in feedback.get("llm_results", []):
             rule_name = llm_result.get("rule_name") or "unknown_rule"
             findings = llm_result.get("findings") or []
@@ -315,6 +349,7 @@ with llm_tab:
                         if index < len(findings):
                             st.divider()
 
+        # Enable download of json LLM feedback for debugging
         st.download_button(
             label="Download LLM feedback (JSON)",
             data=json.dumps(
@@ -326,6 +361,7 @@ with llm_tab:
             mime="application/json",
         )
 
+# Design of the Rag chat tab
 with rag_tab:
     st.subheader("RAG chat")
     st.write("Ask grounded questions about the uploaded assessment and the IUCN reference documents.")
@@ -345,7 +381,7 @@ with rag_tab:
         # Parse and cache the uploaded assessment once per file so the chat can
         # reuse the same draft store across multiple prompts.
         if st.session_state.get("rag_assessment_input_signature") != file_signature:
-            assessment_for_rag = parse_dict(str(tmp_path))
+            assessment_for_rag = parse_to_dict(str(tmp_path))
             st.session_state["rag_assessment_input_dict"] = assessment_for_rag
             st.session_state["rag_assessment_input_signature"] = file_signature
             st.session_state["rag_report_dict"] = build_report_from_assessment(assessment_for_rag)
@@ -355,12 +391,15 @@ with rag_tab:
                 file_signature,
             )
 
+        # UI button to clear chat box
         if st.button(
             "Clear RAG chat",
             key="clear_rag_chat",
             disabled=not st.session_state["rag_messages"],
             use_container_width=True,
         ):
+            # Clear only the chat transcript; the cached draft store is reused
+            # until a new document is uploaded.
             st.session_state["rag_messages"] = []
             st.rerun()
 
@@ -388,6 +427,7 @@ with rag_tab:
                     "Start the conversation below. The chat history stays in this pane so the input box remains in place."
                 )
 
+            # Re-render the full conversation from session state on every refresh.
             for message in st.session_state["rag_messages"]:
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
@@ -414,6 +454,8 @@ with rag_tab:
         )
 
         if user_prompt:
+            # Append the user turn immediately so the prompt appears in the
+            # transcript even before the assistant response finishes.
             st.session_state["rag_messages"].append({"role": "user", "content": user_prompt})
 
             with chat_history:
@@ -462,6 +504,8 @@ with rag_tab:
                                 st.error(debug_data["request_error"])
                             st.code(debug_payload, language="json")
 
+            # Persist the assistant turn after the response has been rendered so
+            # the full exchange survives the rerun triggered below.
             st.session_state["rag_messages"].append(
                 {
                     "role": "assistant",
@@ -478,6 +522,7 @@ with rag_tab:
             )
             st.rerun()
 
+# Design of the download feedback tab
 with download_tab:
     st.subheader("Download feedback")
     st.write(
@@ -485,6 +530,7 @@ with download_tab:
         "(rules-based, LLM, or both)."
     )
 
+    # Generate and display which feedback is availabe to download based on session state
     has_rules_output = st.session_state.get("rules_feedback") is not None
     has_llm_output = st.session_state.get("llm_feedback") is not None
     has_any_output = has_rules_output or has_llm_output
@@ -504,6 +550,8 @@ with download_tab:
         "At least one of these feedbacks must be ready for the download to be available."
     )
 
+    # Build a short status label so the tab can reflect which sheets will be
+    # included in the workbook before the user downloads it.
     tab_labels = []
     if has_rules_output:
         tab_labels.append("Rules")
@@ -520,6 +568,8 @@ with download_tab:
             disabled=True,
         )
     else:
+        # Generate the workbook lazily so we only do the Excel work when there
+        # is at least one feedback payload ready to export.
         excel_bytes = build_downloadable_feedback_excel(
             rules_feedback=st.session_state.get("rules_feedback") if has_rules_output else None,
             llm_feedback=st.session_state.get("llm_feedback") if has_llm_output else None,

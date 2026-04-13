@@ -1,4 +1,10 @@
-"""Helpers shared by the Streamlit app."""
+"""Helpers shared by the Streamlit app.
+
+Purpose:
+    This module contains small workbook-building helpers used by ``app.py`` so
+    the tab rendering logic can stay focused on UI flow rather than Excel
+    export details.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +18,28 @@ def build_downloadable_feedback_excel(
     rules_feedback: dict[str, Any] | None,
     llm_feedback: dict[str, Any] | None,
 ) -> bytes:
-    """Return an Excel workbook for any available rules-based and/or LLM feedback."""
+    """
+    Return an Excel workbook for any available rules-based and/or LLM feedback.
+
+    The workbook can contain:
+    - a ``Rules`` sheet built from grouped rules-based violations
+    - an ``LLM`` sheet built from the simplified LLM review findings
+
+    Either payload may be omitted. The helper writes only the sheets for which
+    feedback data is available.
+
+    Args:
+        rules_feedback (dict[str, Any] | None): Rules-based feedback payload
+            stored in Streamlit session state, or ``None`` when no rules output
+            has been generated.
+        llm_feedback (dict[str, Any] | None): LLM feedback payload stored in
+            Streamlit session state, or ``None`` when no LLM output has been
+            generated.
+
+    Returns:
+        bytes: Excel workbook bytes ready to pass into
+            ``st.download_button(...)``.
+    """
 
     rules_columns = [
         "Section title",
