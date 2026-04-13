@@ -143,6 +143,7 @@ class IUCNTermsChecker(BaseChecker):
         `Critically Endangered`
         `Near Threatened`
         `Extinct in the Wild`
+        `Critically Endangered`
         `critically endangered status` only if the category phrase itself is
         already correctly cased
         text that does not contain a full category phrase
@@ -164,6 +165,20 @@ class IUCNTermsChecker(BaseChecker):
         for category, _ in self.CATEGORIES:
             category_pattern = re.compile(rf'\b{re.escape(category)}\b', re.IGNORECASE)
             for match in category_pattern.finditer(cleaned_text):
+                if category == "Endangered" and re.search(
+                    r'critically\s+$',
+                    cleaned_text[:match.start()],
+                    re.IGNORECASE,
+                ):
+                    continue
+
+                if category == "Extinct" and re.match(
+                    r'\s+in\s+the\s+wild\b',
+                    cleaned_text[match.end():],
+                    re.IGNORECASE,
+                ):
+                    continue
+
                 if match.group(0) != category:
                     original_start = index_map[match.start()]
                     original_end = index_map[match.end() - 1] + 1

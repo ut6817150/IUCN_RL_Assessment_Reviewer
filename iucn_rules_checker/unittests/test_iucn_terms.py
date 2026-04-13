@@ -129,6 +129,39 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             messages,
         )
 
+    def test_category_full_name_capitalization_ignores_endangered_when_preceded_by_critically(self) -> None:
+        text = (
+            "One draft described critically endangered plants. "
+            "Another note mentioned Critically endangered taxa."
+        )
+
+        violations = IUCNTermsChecker().check_category_full_name_capitalization("Test Section", text)
+        messages = [violation.message for violation in violations]
+
+        self.assertNotIn(
+            "Red List category should be capitalized: 'Endangered'",
+            messages,
+        )
+        self.assertIn(
+            "Red List category should be capitalized: 'Critically Endangered'",
+            messages,
+        )
+
+    def test_category_full_name_capitalization_ignores_extinct_when_followed_by_in_the_wild(self) -> None:
+        text = "A note described extinct in the wild populations."
+
+        violations = IUCNTermsChecker().check_category_full_name_capitalization("Test Section", text)
+        messages = [violation.message for violation in violations]
+
+        self.assertNotIn(
+            "Red List category should be capitalized: 'Extinct'",
+            messages,
+        )
+        self.assertIn(
+            "Red List category should be capitalized: 'Extinct in the Wild'",
+            messages,
+        )
+
     def test_threatened_case_strips_simple_style_markers_before_matching(self) -> None:
         text = (
             "many <i>Threat</i><b>ened</b> species remain. "

@@ -101,7 +101,7 @@ class AbbreviationChecker(BaseChecker):
 
         Already-correct forms such as ``etc.``, ``in lit.``, ``pers. comm.``,
         ``pers. obs.``, and ``Prof.`` are ignored. Abbreviations outside this
-        fixed shortlist, such as ``Rev`` or ``Assoc Prof``, are also ignored.
+        fixed shortlist, such as ``Rev``, are also ignored.
         """
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
@@ -124,7 +124,7 @@ class AbbreviationChecker(BaseChecker):
                 suggested_fix="etc.",
             ))
 
-        inlit_pattern = re.compile(r'\bin\s+lit\b(?!t)', re.IGNORECASE)
+        inlit_pattern = re.compile(r'\bin\s+lit\b(?![t.])', re.IGNORECASE)
         for match in inlit_pattern.finditer(cleaned_text):
             start = index_map[match.start()]
             end = index_map[match.end() - 1] + 1

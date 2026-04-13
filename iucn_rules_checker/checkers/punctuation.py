@@ -141,9 +141,12 @@ class PunctuationChecker(BaseChecker):
         while mapping any match span back to the original rich-text input.
 
         This method searches case-insensitively for the exact phrase
-        `for example` and then checks whether it has:
-        - a comma immediately before it
-        - a comma immediately after it
+        `for example` and then applies a small decision flow:
+        - if the phrase is at paragraph start or follows sentence-ending
+          punctuation plus whitespace, it only checks whether the following
+          comma is present
+        - otherwise it treats the phrase as mid-sentence and checks for both
+          the preceding and following commas
 
         It is designed for mid-sentence parenthetical use, such as:
         `The species, for example, occurs in cloud forest.`
@@ -152,6 +155,7 @@ class PunctuationChecker(BaseChecker):
         `The species for example, occurs in cloud forest.`
         `The species, for example occurs in cloud forest.`
         `The species for example occurs in cloud forest.`
+        `For example the species occurs in cloud forest.`
 
         Examples not flagged:
         `The species, for example, occurs in cloud forest.`
@@ -182,25 +186,46 @@ class PunctuationChecker(BaseChecker):
             after = cleaned_text[end:end + 1]
             original_start = index_map[start]
             original_end = index_map[end - 1] + 1
-
-            if (
+            preceding_text = cleaned_text[:start]
+            sentence_start = (
                 start == 0
-                or cleaned_text[:start].endswith(". ")
-                or cleaned_text[:start].endswith("! ")
-                or cleaned_text[:start].endswith("? ")
-            ):
+                or re.search(r"[.!?]\s+$", preceding_text) is not None
+            )
+
+            if sentence_start:
+                if after != ",":
+                    violations.append(self.create_violation(
+                        section_name=section_name,
+                        text=text,
+                        span=(original_start, original_end),
+                        message="'for example' should be followed by a comma",
+                        suggested_fix="for example,",
+                    ))
                 continue
 
-            if not before.strip().endswith(","):
-                violations.append(self.create_violation(
-                    section_name=section_name,
-                    text=text,
-                    span=(original_start, original_end),
-                    message="'for example' should be preceded by a comma",
-                    suggested_fix=None,
-                ))
+            preceding_comma_missing = not before.strip().endswith(",")
+            following_comma_missing = after != ","
 
-            if after != ",":
+            if preceding_comma_missing:
+                if following_comma_missing:
+                    violations.append(self.create_violation(
+                        section_name=section_name,
+                        text=text,
+                        span=(original_start, original_end),
+                        message="'for example' should be enclosed by commas, no preceeding comma if sentence or paragraph start",
+                        suggested_fix=None,
+                    ))
+                else:
+                    violations.append(self.create_violation(
+                        section_name=section_name,
+                        text=text,
+                        span=(original_start, original_end),
+                        message="'for example' should be preceded by a comma",
+                        suggested_fix=None,
+                    ))
+                continue
+
+            if following_comma_missing:
                 violations.append(self.create_violation(
                     section_name=section_name,
                     text=text,

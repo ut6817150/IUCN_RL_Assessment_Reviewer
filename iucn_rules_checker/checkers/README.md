@@ -114,7 +114,7 @@ Detailed coverage:
     - `Professor Smith`
     - `etcetera`
     - `p e r s comm`
-    - `Assoc Prof`
+    - `Rev. White`
     - abbreviations outside the hard-coded shortlist such as `cf.` or `ca.`
 
 - `check_latin_terms_without_period(...)`
@@ -499,7 +499,7 @@ Detailed coverage:
 
 - `check_category_full_name_capitalization(...)`
   How it works:
-  strips all simple style markers, then loops through the hardcoded full category names in `CATEGORIES` and checks each full phrase for exact canonical case.
+  strips all simple style markers, then loops through the hardcoded full category names in `CATEGORIES` and checks each full phrase for exact canonical case. It also suppresses the shorter overlap matches `Endangered` inside `Critically Endangered` and `Extinct` inside `Extinct in the Wild`, so those longer category phrases are only reported once.
   Hard-coded list dependency:
   this method only knows the full category names present in the `CATEGORIES` list.
 
@@ -510,6 +510,8 @@ Detailed coverage:
 
   - Misses:
     - correctly cased `Critically Endangered`, `Near Threatened`, `Extinct in the Wild`
+    - the shorter overlap matches `Endangered` inside `Critically Endangered`
+    - the shorter overlap match `Extinct` inside `Extinct in the Wild`
     - misspellings that no longer match the category phrase
     - substantive correctness of the chosen Red List category
     - category names not present in the hard-coded `CATEGORIES` list
@@ -661,7 +663,7 @@ Aggregated method list:
 - `check_range_dashes(...)`
   Ensures numeric ranges use an unspaced en dash.
 - `check_for_example_commas(...)`
-  Ensures `for example` is enclosed by commas when used mid-sentence.
+  Checks comma placement around `for example`, with sentence-start and paragraph-start uses handled separately.
 - `check_colon_spacing(...)`
   Removes spaces before a colon.
 - `check_semicolon_spacing(...)`
@@ -693,18 +695,23 @@ Detailed coverage:
 
 - `check_for_example_commas(...)`
   How it works:
-  strips all simple style markers, then finds `for example` case-insensitively and checks whether a comma appears immediately before and after the phrase. Sentence-start uses are skipped at paragraph start or immediately after `.`, `!`, or `?`.
+  strips all simple style markers, then finds `for example` case-insensitively and applies a small decision flow:
+  - at paragraph start, or immediately after `. `, `! `, or `? `, it only checks whether the following comma is present
+  - otherwise it treats the phrase as mid-sentence and checks both sides
+  - if both commas are missing mid-sentence, it returns one combined message instead of two separate findings
   Hard-coded scope:
   this method only checks the literal phrase `for example`.
 
   - Catches:
+    - `For example the species occurs...`
     - `The species for example, occurs...`
     - `The species, for example occurs...`
     - `The species for example occurs...`
 
   - Misses:
     - correct `The species, for example, occurs...`
-    - sentence-start `For example, ...`
+    - correct `For example, ...`
+    - correct `This changed. For example, ...`
     - broader punctuation reasoning beyond this narrow comma rule
 
 - `check_colon_spacing(...)`

@@ -11,8 +11,14 @@ class DummyChecker(BaseChecker):
     def __init__(self) -> None:
         super().__init__()
 
-    def check_text(self, section_name: str, text: str):  # pragma: no cover - not used here
-        return []
+    def check_text(self, section_name: str, text: str):
+        return [self.create_violation(
+            section_name=section_name,
+            text=text,
+            span=(0, min(5, len(text))),
+            message="Dispatched violation",
+            suggested_fix=None,
+        )]
 
     def check_demo_rule(self, section_name: str, text: str):
         return self.create_violation(
@@ -22,6 +28,15 @@ class DummyChecker(BaseChecker):
             message="Demo violation",
             suggested_fix="Demo",
         )
+
+    def check_method_name_rule(self) -> str:
+        return self.get_rule_method_name()
+
+    def call_get_rule_method_name_through_wrapper(self) -> str:
+        return self._helper_calls_get_rule_method_name()
+
+    def _helper_calls_get_rule_method_name(self) -> str:
+        return self.get_rule_method_name()
 
 
 class BaseCheckerTests(unittest.TestCase):
@@ -78,6 +93,41 @@ class BaseCheckerTests(unittest.TestCase):
         self.assertEqual(violation.matched_text, "Alpha")
         self.assertEqual(violation.matched_snippet, "Alpha beta gamma")
         self.assertEqual(violation.section_name, "Section")
+
+    def test_check_dispatches_to_check_text(self) -> None:
+        checker = DummyChecker()
+
+        violations = checker.check(("Section [paragraph 1]", "Alpha beta gamma"))
+
+        self.assertEqual(len(violations), 1)
+        self.assertEqual(violations[0].message, "Dispatched violation")
+        self.assertEqual(violations[0].rule_method, "DummyChecker.check_text")
+
+    def test_normalize_section_name_removes_only_paragraph_suffix(self) -> None:
+        checker = DummyChecker()
+
+        self.assertEqual(
+            checker.normalize_section_name("Assessment > Notes [paragraph 3]"),
+            "Assessment > Notes",
+        )
+        self.assertEqual(
+            checker.normalize_section_name("Assessment > Notes [table 1] [row 2]"),
+            "Assessment > Notes [table 1] [row 2]",
+        )
+
+    def test_get_rule_method_name_returns_immediate_caller(self) -> None:
+        checker = DummyChecker()
+
+        self.assertEqual(
+            checker.call_get_rule_method_name_through_wrapper(),
+            "DummyChecker.call_get_rule_method_name_through_wrapper",
+        )
+
+    def test_begin_and_end_sweep_base_noop(self) -> None:
+        checker = DummyChecker()
+
+        checker.begin_sweep()
+        checker.end_sweep()
 
 
 if __name__ == "__main__":

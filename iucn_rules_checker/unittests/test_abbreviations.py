@@ -74,6 +74,14 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertEqual(messages.count("Use 'pers. comm.' format"), 2)
         self.assertEqual(messages.count("Use 'pers. obs.' format"), 2)
 
+    def test_in_lit_with_period_is_not_flagged(self) -> None:
+        text = "Published sources may be described as in lit. in one note, while another still says in lit without the period."
+
+        violations = AbbreviationChecker().check_abbreviation_formats("Test Section", text)
+        matched_texts = [violation.matched_text for violation in violations]
+
+        self.assertEqual(matched_texts.count("in lit"), 1)
+
     def test_et_al_requires_italicized_canonical_form(self) -> None:
         text = (
             "References may cite et al in plain text. "

@@ -1,8 +1,6 @@
 """Regression tests for the block-level assessment parser."""
 
-import json
 import unittest
-from pathlib import Path
 
 from iucn_rules_checker.assessment_parser import AssessmentParser
 
@@ -10,19 +8,65 @@ from iucn_rules_checker.assessment_parser import AssessmentParser
 class AssessmentParserTests(unittest.TestCase):
     """Lock in the parser's current block-by-block behavior."""
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        json_path = (
-            Path(__file__).resolve().parent.parent
-            / "test_json_file"
-            / "Myrcia neosmithii_draft_status_Apr2022_v2_parse_dict (1).json"
-        )
-        with json_path.open(encoding="utf-8") as handle:
-            cls.assessment = json.load(handle)
-
     def test_parse_returns_block_level_full_report(self) -> None:
-        full_report = AssessmentParser().parse(self.assessment)
-        title = self.assessment["title"]
+        assessment = {
+            "title": "Sample Assessment",
+            "blocks": [
+                {"type": "paragraph", "text_rich": "<b>Draft</b>"},
+                {
+                    "type": "paragraph",
+                    "text_rich": "<b><i>Myrcia neosmithii</i></b><b> - K.Campbell & K.Samra</b>",
+                },
+                {
+                    "type": "table",
+                    "rows_rich": [
+                        ["<b>Red List Status</b>"],
+                        ["VU - Vulnerable"],
+                    ],
+                },
+            ],
+            "children": [
+                {
+                    "title": "Red List Assessment",
+                    "blocks": [],
+                    "children": [
+                        {
+                            "title": "Assessment Information",
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "text_rich": "<b>Date of Assessment:</b> 2021-06-29",
+                                }
+                            ],
+                            "children": [],
+                        },
+                        {
+                            "title": "Assessment Rationale",
+                            "blocks": [
+                                {
+                                    "type": "paragraph",
+                                    "text_rich": "This species is known from just two collections and covers 10 km<sup>2</sup>.",
+                                }
+                            ],
+                            "children": [],
+                        },
+                    ],
+                },
+                {
+                    "title": "Bibliography",
+                    "blocks": [
+                        {
+                            "type": "paragraph",
+                            "text_rich": "Alonso, L.E. 2020. Example reference.",
+                        }
+                    ],
+                    "children": [],
+                },
+            ],
+        }
+
+        full_report = AssessmentParser().parse(assessment)
+        title = assessment["title"]
         paragraph_entries = [key for key in full_report if "[paragraph " in key]
         table_row_entries = [key for key in full_report if "[table " in key and "[row " in key]
 
@@ -34,9 +78,9 @@ class AssessmentParserTests(unittest.TestCase):
         rationale_1 = f"{title} > Red List Assessment > Assessment Rationale [paragraph 1]"
         bibliography_1 = f"{title} > Bibliography [paragraph 1]"
         self.assertIsInstance(full_report, dict)
-        self.assertEqual(len(full_report), 70)
-        self.assertEqual(len(paragraph_entries), 31)
-        self.assertEqual(len(table_row_entries), 39)
+        self.assertEqual(len(full_report), 7)
+        self.assertEqual(len(paragraph_entries), 5)
+        self.assertEqual(len(table_row_entries), 2)
         self.assertTrue(all(isinstance(key, str) for key in full_report))
         self.assertTrue(
             all(isinstance(value, str) and value.strip() for value in full_report.values())
@@ -60,8 +104,11 @@ class AssessmentParserTests(unittest.TestCase):
             "<b><i>Myrcia neosmithii</i></b><b> - K.Campbell & K.Samra</b>",
         )
         self.assertEqual(full_report[root_table_row_1], "<b>Red List Status</b>")
-        self.assertIn("VU - Vulnerable", full_report[root_table_row_2])
-        self.assertIn("Date of Assessment: </b>2021-06-29", full_report[assessment_info_1])
+        self.assertEqual(full_report[root_table_row_2], "VU - Vulnerable")
+        self.assertEqual(
+            full_report[assessment_info_1],
+            "<b>Date of Assessment:</b> 2021-06-29",
+        )
         self.assertIn("This species is known from just two collections", full_report[rationale_1])
         self.assertIn("Alonso, L.E.", full_report[bibliography_1])
         self.assertIn("<sup>2</sup>", full_report[rationale_1])
