@@ -1,0 +1,832 @@
+{
+  "title": null,
+  "level": 0,
+  "path": [],
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "Draft",
+      "style": "Normal"
+    },
+    {
+      "type": "paragraph",
+      "text": "Habropetalum dawei - (Hutch. & Dalziel) Airy Shaw",
+      "style": "Normal"
+    },
+    {
+      "type": "paragraph",
+      "text": "PLANTAE - TRACHEOPHYTA - MAGNOLIOPSIDA - CARYOPHYLLALES - DIONCOPHYLLACEAE - Habropetalum - dawei",
+      "style": "Normal"
+    },
+    {
+      "type": "paragraph",
+      "text": "Common Names: Tawma (Mende), Sangi (Niger-Kordofanian (Other)), Toma (Mende)\nSynonyms: Dioncophyllum dawei Hutch. & Dalziel",
+      "style": "Normal (Web)"
+    },
+    {
+      "type": "table",
+      "rows": [
+        [
+          "Red List Status"
+        ],
+        [
+          "EN - Endangered, B1ab(iii)+2ab(iii) (IUCN version 3.1)"
+        ]
+      ]
+    }
+  ],
+  "children": [
+    {
+      "title": "Red List Assessment",
+      "level": 1,
+      "path": [
+        "Red List Assessment"
+      ],
+      "blocks": [],
+      "children": [
+        {
+          "title": "Assessment Information",
+          "level": 2,
+          "path": [
+            "Red List Assessment",
+            "Assessment Information"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Date of Assessment: 2023-03-06",
+              "style": "Normal (Web)"
+            },
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Reviewed?",
+                  "Date of Review:",
+                  "Status:",
+                  "Reasons for Rejection:",
+                  "Improvements Needed:"
+                ],
+                [
+                  "true",
+                  "2023-03-23",
+                  "Passed",
+                  "-",
+                  "-"
+                ]
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Assessor(s): Svahnström, V., Paradis, A.-H. & Bidault, E.",
+              "style": "Normal (Web)"
+            },
+            {
+              "type": "paragraph",
+              "text": "Reviewer(s): Couch, C.",
+              "style": "Normal (Web)"
+            },
+            {
+              "type": "paragraph",
+              "text": "Facilitators/Compilers: Plummer, J.",
+              "style": "Normal (Web)"
+            },
+            {
+              "type": "paragraph",
+              "text": "Institution(s): Royal Botanic Gardens, Kew & Missouri Botanical Garden",
+              "style": "Normal (Web)"
+            },
+            {
+              "type": "paragraph",
+              "text": "Regions: Global",
+              "style": "Normal (Web)"
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Assessment Rationale",
+          "level": 2,
+          "path": [
+            "Red List Assessment",
+            "Assessment Rationale"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Habropetalum dawei is a large scrambling shrub or liana endemic to southern Sierra Leone and restricted to regularly flooded scrub and forested habitats on sandy beaches, between 0 and 20 m in elevation. It has a very restricted range, known from a small stretch of strand habitat and only known from five historical collections made between 1926 and 1965.The five collections represent five occurrences and are suspected to represent two or three subpopulations. Although collections are very old, the species' habitat is still well represented in the area, therefore, these five occurrences are suspected to remain extant. It has an extent of occurrence (EOO) of 88 km2 and an area of occupancy (AOO) of 16 km2. It has been reported to be locally abundant at several sites within its limited range, however there is no numerical population data available. The main threat to this species is land clearing associated with coastal human settlements in Pujehun District. This threat is considered to be contributing to a continuing decline in the area and quality of habitat for this species. Consequently, the five occurrences are estimated to represent two or three locations, with regard to the most serious plausible threat (clearing for agriculture). Given its restricted range, presence at as few as two locations, and continuing decline, this species qualifies as Endangered B1ab(iii)+2ab(iii). Targeted surveys within the known range of this species are recommended to clarify its current population status and trends, given that it has not been collected for over 50 years.",
+              "style": "Normal (Web)"
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Distribution",
+      "level": 1,
+      "path": [
+        "Distribution"
+      ],
+      "blocks": [],
+      "children": [
+        {
+          "title": "Geographic Range",
+          "level": 2,
+          "path": [
+            "Distribution",
+            "Geographic Range"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Habropetalum dawei is endemic to Sierra Leone (POWO 2022). It is only known from a c. 50 kilometre stretch of coastline in the southern part of Sierra Leone, extending from the coastal zone between lakes Mape and Mabesi in the northwest to around Mano Salija in the southeast (Airy Shaw 1951). Based on herbarium specimens, this species has an extent of occurrence (EOO) of 88 km2 and an area of occupancy (AOO) of 16 km2. The AOO should be considered a minimum given that collection density in this region has been low and H. dawei has been reported as abundant near Mano Bonjema, Juring, and the strip of sandy habitat between Mape and Mabesi lakes (Airy Shaw 1951). The habitat this species occurs in extends south into Liberia and it has been suggested that this species could be present at Lake Piso in Liberia, however it is a conspicuous plant and it is considered likely that it would have been collected from similar habitat in Liberia or northern Sierra Leone if present there (Airy Shaw 1951). The EOO calculated from herbarium specimens is therefore likely to be accurate for this species. There is one specimen identified as this species collected from Gabon, however it is considered doubtful that H. dawei occurs there and this specimen has been excluded from the assessment.",
+              "style": "Normal (Web)"
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Area of Occupancy (AOO)",
+          "level": 2,
+          "path": [
+            "Distribution",
+            "Area of Occupancy (AOO)"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Estimated area of occupancy (AOO) - in km2",
+                  "Justification"
+                ],
+                [
+                  "16",
+                  "Calculated from georeferenced herbarium specimens using a 2x2 km2 grid cell in GeoCAT (Bachman et al. 2011)."
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Extent of Occurrence (EOO)",
+          "level": 2,
+          "path": [
+            "Distribution",
+            "Extent of Occurrence (EOO)"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Estimated extent of occurrence (EOO)- in km2",
+                  "EOO estimate calculated from Minimum Convex Polygon",
+                  "Justification"
+                ],
+                [
+                  "88",
+                  "true",
+                  "Extent of occurrence calculated using georeferenced herbarium specimens in GeoCAT (Bachman et al. 2011)."
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Locations Information",
+          "level": 2,
+          "path": [
+            "Distribution",
+            "Locations Information"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Number of Locations",
+                  "Justification"
+                ],
+                [
+                  "2-3,2",
+                  "The main threat is small-scale clearing associated with villages/settlements. Thus, one location includes records from near Mano Bonjema and the second includes records from near Juring. Upper bound includes possible location from 'Mosente', a locality described in the protologue which could not be located."
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Very restricted AOO or number of locations (triggers VU D2)",
+          "level": 2,
+          "path": [
+            "Distribution",
+            "Very restricted AOO or number of locations (triggers VU D2)"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Very restricted in area of occupancy (AOO) and/or # of locations",
+                  "Justification"
+                ],
+                [
+                  "No",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Elevation / Depth / Depth Zones",
+          "level": 2,
+          "path": [
+            "Distribution",
+            "Elevation / Depth / Depth Zones"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Elevation Lower Limit (in metres above sea level): 0",
+              "style": "Normal (Web)"
+            },
+            {
+              "type": "paragraph",
+              "text": "Elevation Upper Limit (in metres above sea level): 20",
+              "style": "Normal (Web)"
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Map Status",
+          "level": 2,
+          "path": [
+            "Distribution",
+            "Map Status"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Map Status",
+                  "Use map from previous assessment",
+                  "How the map was created, including data sources/methods used:",
+                  "Please state reason for map not available:",
+                  "Data Sensitive?",
+                  "Justification",
+                  "Geographic range this applies to:",
+                  "Date restriction imposed:"
+                ],
+                [
+                  "Done",
+                  "-",
+                  "Map created using georeferenced herbarium specimens.",
+                  "-",
+                  "-",
+                  "-",
+                  "-",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Biogeographic Realms",
+          "level": 2,
+          "path": [
+            "Distribution",
+            "Biogeographic Realms"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Biogeographic Realm: Afrotropical",
+              "style": "Normal (Web)"
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Occurrence",
+      "level": 1,
+      "path": [
+        "Occurrence"
+      ],
+      "blocks": [],
+      "children": [
+        {
+          "title": "Countries of Occurrence",
+          "level": 2,
+          "path": [
+            "Occurrence",
+            "Countries of Occurrence"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Country",
+                  "Presence",
+                  "Origin",
+                  "Formerly Bred",
+                  "Seasonality"
+                ],
+                [
+                  "Sierra Leone",
+                  "Extant",
+                  "Native",
+                  "-",
+                  "Resident"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Population",
+      "level": 1,
+      "path": [
+        "Population"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Habropetalum dawei has been reported to be abundant in scrub and forested habitats along the sandy coastal zone within its highly restricted range. However, there is no numerical population data available and there have been no collections of this species since 1965. Targeted surveys are recommended to determine if it is still abundant and to collect more detailed data on the population status of this species.",
+          "style": "Normal (Web)"
+        }
+      ],
+      "children": [
+        {
+          "title": "Population Information",
+          "level": 2,
+          "path": [
+            "Population",
+            "Population Information"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Current Population Trend: Unknown",
+              "style": "Normal (Web)"
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Habitats and Ecology",
+      "level": 1,
+      "path": [
+        "Habitats and Ecology"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Habropetalum dawei is a scrambling woody shrub or liana which grows up to 10 meters tall (Airy Shaw 1951, Oyen 2012). It flowers frequently and is thought to be pollinated by bees (Airy Shaw 1951, Oyen 2012). However, it rarely sets seed, possibly due to frequent damage to the flowers by insects (Airy Shaw 1951, Oyen 2012). The large, light seeds may be an adaptation to water dispersal (Airy Shaw 1951).\nThis species is restricted to regularly flooded scrub and forested habitats on sandy beaches along coasts and tidal floodplains (Airy Shaw 1951). It occurs in the Guinean mangroves ecoregion (Olson et al. 2001).",
+          "style": "Normal (Web)"
+        }
+      ],
+      "children": [
+        {
+          "title": "IUCN Habitats Classification Scheme",
+          "level": 2,
+          "path": [
+            "Habitats and Ecology",
+            "IUCN Habitats Classification Scheme"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Habitat",
+                  "Season",
+                  "Suitability",
+                  "Major Importance?"
+                ],
+                [
+                  "3.6. Shrubland -> Shrubland - Subtropical/Tropical Moist",
+                  "Resident",
+                  "Suitable",
+                  "-"
+                ],
+                [
+                  "12.2. Marine Intertidal -> Marine Intertidal - Sandy Shoreline and/or Beaches, Sand Bars, Spits, Etc",
+                  "Resident",
+                  "Suitable",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Continuing Decline in Habitat",
+          "level": 2,
+          "path": [
+            "Habitats and Ecology",
+            "Continuing Decline in Habitat"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Continuing decline in area, extent and/or quality of habitat?",
+                  "Qualifier",
+                  "Justification"
+                ],
+                [
+                  "Yes",
+                  "Inferred",
+                  "Satellite imagery from the localities where this species is known from (Juring, Mano Bonjema) suggests that small tracts of coastal scrub are being cleared for agriculture and palm plantations."
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Systems",
+          "level": 2,
+          "path": [
+            "Habitats and Ecology",
+            "Systems"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "System: Terrestrial",
+              "style": "Normal (Web)"
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Plant / Fungi Specific",
+          "level": 2,
+          "path": [
+            "Habitats and Ecology",
+            "Plant / Fungi Specific"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Wild relative of a crop? No",
+              "style": "Normal (Web)"
+            },
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Plant and Fungal Growth Forms"
+                ],
+                [
+                  "Shrub - large"
+                ],
+                [
+                  "Vines"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Use and Trade",
+      "level": 1,
+      "path": [
+        "Use and Trade"
+      ],
+      "blocks": [],
+      "children": [
+        {
+          "title": "General Use and Trade Information",
+          "level": 2,
+          "path": [
+            "Use and Trade",
+            "General Use and Trade Information"
+          ],
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "There are several recorded uses of Habropetalum dawei. The stems of this species are used to make ropes for tying house posts. The Kwako people also use rope made from this species to tie bundles of piassava. Young leaves or whole plants are pounded and used as fish poison. This preparation, mixed with palm oil, is also applied to feet in order to kill jiggers (Tunga penetrans), a parasitic flea (Oyen 2012).",
+              "style": "Normal (Web)"
+            },
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "End Use",
+                  "Subsistence",
+                  "National",
+                  "International",
+                  "Other (please specify)"
+                ],
+                [
+                  "3. Medicine - human & veterinary",
+                  "true",
+                  "-",
+                  "-",
+                  "-"
+                ],
+                [
+                  "4. Poisons",
+                  "true",
+                  "-",
+                  "-",
+                  "-"
+                ],
+                [
+                  "8. Fibre",
+                  "true",
+                  "-",
+                  "-",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Threats",
+      "level": 1,
+      "path": [
+        "Threats"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Habropetalum dawei occurs within the Guinean mangroves ecoregion, where habitat loss is occurring due to rice farming, urban expansion, road construction, and shrimp farming (Martin and Burgess 2022). This species is restricted to a small stretch of strand habitat within this ecoregion, in the Pujehun District of southern Sierra Leone. Pujehun District is sparsely populated with large tracts of intact coastal vegetation, however satellite imagery shows that small-scale clearing of natural habitat is occurring near several settlements where this species has been recorded from. Considering the highly restricted range and linear habitat of H. dawei, it is likely that clearing in areas where it has been noted as abundant may pose significant threats to this species. However, it is not entirely clear what impact land clearing has on this species, considering that it has been reported from regenerating coastal vegetation and may therefore have some tolerance to disturbance. Research on the threats and habitat requirements of this species are recommended to clarify its conservation status.",
+          "style": "Normal (Web)"
+        }
+      ],
+      "children": [
+        {
+          "title": "Threats Classification Scheme",
+          "level": 2,
+          "path": [
+            "Threats",
+            "Threats Classification Scheme"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Threat",
+                  "Timing",
+                  "Scope",
+                  "Severity"
+                ],
+                [
+                  "2.1.2. Agriculture & aquaculture -> Annual & perennial non-timber crops -> Small-holder farming",
+                  "Ongoing",
+                  "Unknown",
+                  "-"
+                ],
+                [
+                  "2.2.1. Agriculture & aquaculture -> Wood & pulp plantations -> Small-holder plantations",
+                  "Ongoing",
+                  "Unknown",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Conservation",
+      "level": 1,
+      "path": [
+        "Conservation"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "This species does not occur within any protected areas and is not held in any ex situ collections (UNEP-WCMC and IUCN 2022, BGCI 2022). Since H. dawei is threatened by small-scale vegetation clearing, various conservation measures should be considered. First, it should be sought in other places, such as the neighboring Liberian coast, to increase knowledge of its full distribution. Second, it may be regarded as an HCV1 species (High Conservation Value), and as a consequence be included in the management plan of the industrial concessions within which it may occur. Third, ex situ conservation should be tested, both within Sierra Leone, and internationally. Finally, a public awareness campaign should be conducted targeting industrial companies and other private actors, NGOs, scientific institutions, and government to ensure that H. dawei is taken into consideration when decisions are made that could impact its conservation.",
+          "style": "Normal (Web)"
+        }
+      ],
+      "children": [
+        {
+          "title": "Conservation Actions In- Place",
+          "level": 2,
+          "path": [
+            "Conservation",
+            "Conservation Actions In- Place"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Occur in at least one PA",
+                  "Note"
+                ],
+                [
+                  "No",
+                  "-"
+                ]
+              ]
+            },
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Subject to ex-situ conservation",
+                  "Note"
+                ],
+                [
+                  "No",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Important Conservation Actions Needed",
+          "level": 2,
+          "path": [
+            "Conservation",
+            "Important Conservation Actions Needed"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Conservation Actions",
+                  "Note"
+                ],
+                [
+                  "1.1. Land/water protection -> Site/area protection",
+                  "-"
+                ],
+                [
+                  "3.4.2. Species management -> Ex-situ conservation -> Genome resource bank",
+                  "-"
+                ],
+                [
+                  "4.3. Education & awareness -> Awareness & communications",
+                  "-"
+                ],
+                [
+                  "5.1.2. Law & policy -> Legislation -> National level",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        },
+        {
+          "title": "Research Needed",
+          "level": 2,
+          "path": [
+            "Conservation",
+            "Research Needed"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Research",
+                  "Note"
+                ],
+                [
+                  "1.2. Research -> Population size, distribution & trends",
+                  "-"
+                ],
+                [
+                  "1.5. Research -> Threats",
+                  "-"
+                ],
+                [
+                  "2.1. Conservation Planning -> Species Action/Recovery Plan",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Ecosystem Services",
+      "level": 1,
+      "path": [
+        "Ecosystem Services"
+      ],
+      "blocks": [],
+      "children": [
+        {
+          "title": "Ecosystem Services Provided by the Species",
+          "level": 2,
+          "path": [
+            "Ecosystem Services",
+            "Ecosystem Services Provided by the Species"
+          ],
+          "blocks": [
+            {
+              "type": "table",
+              "rows": [
+                [
+                  "Insufficient Information Available",
+                  "All coded services should have an importance score of 5 - Not Known."
+                ],
+                [
+                  "true",
+                  "-"
+                ]
+              ]
+            }
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Bibliography",
+      "level": 1,
+      "path": [
+        "Bibliography"
+      ],
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Airy Shaw, H. K. 1951. On the Dioncophyllaceae, a remarkable new family of flowering plants. . kew Bulletin 6(3): 327-347.",
+          "style": "Normal (Web)"
+        },
+        {
+          "type": "paragraph",
+          "text": "BGCI. 2022. Botanic Gardens Conservation International (BGCI) - PlantSearch. Available at: https://tools.bgci.org/plant_search.php. (Accessed: 2022).",
+          "style": "Normal (Web)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Bachman, S., Moat, J., Hill, A.W., de la Torre, J. and Scott, B. 2011. Supporting Red List threat assessments with GeoCAT: geospatial conservation assessment tool. ZooKeys 150: 117-126. DOI: 10.3897/zookeys.150.2109.",
+          "style": "Normal (Web)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Martin, E. and Burgess, N. 2022. Guinean mangroves. One Earth. Available at: https://www.oneearth.org/ecoregions/guinean-mangroves/.",
+          "style": "Normal (Web)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Olson, D. M., Dinerstein, E., Wikramanayake, E. D., Burgess, N. D., Powell, G. V. N., Underwood, E. C., D'Amico, J. A., Itoua, I., Strand, H. E., Morrison, J. C., Loucks, C. J., Allnutt, T. F., Ricketts, T. H., Kura, Y., Lamoreux, J. F., Wettengel, W. W., Hedao, P. and Kassem, K. R. 2001. Terrestrial ecoregions of the world: a new map of life on Earth. Bioscience 51(11): 933-938.",
+          "style": "Normal (Web)"
+        },
+        {
+          "type": "paragraph",
+          "text": "Oyen, L.P.A. 2012. Habropetalum dawei. In: Brink, M. and Achigan-Dako, E.G. (eds), Plant Resources of Tropical Africa 16: Fibres, pp. 231-232. Wageningen.",
+          "style": "Normal (Web)"
+        },
+        {
+          "type": "paragraph",
+          "text": "POWO. 2022. Plants of the World Online. Facilitated by the Royal Botanic Gardens, Kew. Available at: Available at: http://powo.science.kew.org/. (Accessed: 2022).",
+          "style": "Normal (Web)"
+        },
+        {
+          "type": "paragraph",
+          "text": "UNEP-WCMC and IUCN. 2022. Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online]. Cambridge, UK. UNEP-WCMC and IUCN. Available at: https://www.protectedplanet.net.",
+          "style": "Normal (Web)"
+        }
+      ],
+      "children": []
+    }
+  ],
+  "comments": []
+}
