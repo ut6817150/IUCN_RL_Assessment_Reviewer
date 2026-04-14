@@ -67,6 +67,9 @@ class SymbolChecker(BaseChecker):
         This rule strips all simple style markers, then flags each literal
         ampersand character in the cleaned text.
 
+        The rule is intentionally skipped for section names containing
+        `Assessment Information`.
+
         Examples flagged:
         `forest & woodland`
         `grassland & wetland`
@@ -83,6 +86,9 @@ class SymbolChecker(BaseChecker):
         Returns:
             List[Violation]: Violations produced by this method.
         """
+        if "assessment information" in section_name.lower():
+            return []
+
         violations = []
         cleaned_text, index_map = self.strip_style_markers(
             text,

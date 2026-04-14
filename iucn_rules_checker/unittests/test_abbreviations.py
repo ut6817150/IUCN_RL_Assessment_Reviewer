@@ -60,7 +60,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
         """
         text = (
             "Styled forms like <i>E</i><i>.g.</i>, <b>I</b><b>.e.</b>, and <sup>eg</sup> should still match. "
-            "Fixed forms like <i>etc</i>, <b>in lit</b>, <i>Pers</i> <b>Comm</b>, and <sub>Prof</sub> should also match."
+            "Fixed forms like <i>etc</i>, <b>in litt</b>, <i>Pers</i> <b>Comm</b>, and <sub>Prof</sub> should also match."
         )
 
         violations = AbbreviationChecker().check(("Test Section", text))
@@ -69,7 +69,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
         self.assertIn("Avoid 'e.g.' in body text; use 'for example' instead", messages)
         self.assertIn("Avoid 'i.e.' in body text; use 'that is' instead", messages)
         self.assertIn("Use 'etc.' with period", messages)
-        self.assertIn("Use 'in lit.' not 'in lit', if referring to in published literature", messages)
+        self.assertIn("Use 'in litt.' not 'in litt', if referring to in published literature", messages)
         self.assertIn("Use 'pers. comm.' format", messages)
         self.assertIn("Use 'Prof.' with period", messages)
 
@@ -86,7 +86,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
         text = (
             "Lists may end with ETC in notes. "
             "References often cite ET AL without the final period. "
-            "Older comments may say IN LIT in uppercase. "
+            "Older comments may say IN LITT in uppercase. "
             "Sources may mention Pers Comm from a field botanist. "
             "Drafts may also include Pers Obs without the first period. "
             "A later note ends with pers comm. "
@@ -99,16 +99,16 @@ class AbbreviationCheckerTests(unittest.TestCase):
 
         self.assertIn("Use 'etc.' with period", messages)
         self.assertIn("Use italicized 'et al.'", messages)
-        self.assertIn("Use 'in lit.' not 'in lit', if referring to in published literature", messages)
+        self.assertIn("Use 'in litt.' not 'in litt', if referring to in published literature", messages)
         self.assertIn("Use 'pers. comm.' format", messages)
         self.assertIn("Use 'pers. obs.' format", messages)
         self.assertIn("Use 'Prof.' with period", messages)
         self.assertEqual(messages.count("Use 'pers. comm.' format"), 2)
         self.assertEqual(messages.count("Use 'pers. obs.' format"), 2)
 
-    def test_in_lit_with_period_is_not_flagged(self) -> None:
+    def test_in_litt_with_period_is_not_flagged_and_in_lit_is_ignored(self) -> None:
         """
-        Test that in lit with period is not flagged.
+        Test that in litt with period is not flagged and in lit is ignored.
 
         Args:
             None.
@@ -116,12 +116,17 @@ class AbbreviationCheckerTests(unittest.TestCase):
         Returns:
             None. The assertions inside the test body enforce the expected behavior.
         """
-        text = "Published sources may be described as in lit. in one note, while another still says in lit without the period."
+        text = (
+            "Published sources may be described as in litt. in one note, "
+            "while another still says in litt without the period. "
+            "A legacy note that says in lit should now be ignored."
+        )
 
         violations = AbbreviationChecker().check_abbreviation_formats("Test Section", text)
         matched_texts = [violation.matched_text for violation in violations]
 
-        self.assertEqual(matched_texts.count("in lit"), 1)
+        self.assertEqual(matched_texts.count("in litt"), 1)
+        self.assertNotIn("in lit", matched_texts)
 
     def test_et_al_requires_italicized_canonical_form(self) -> None:
         """

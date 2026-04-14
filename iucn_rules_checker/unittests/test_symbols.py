@@ -61,6 +61,29 @@ class SymbolCheckerTests(unittest.TestCase):
         self.assertEqual(len(ampersand_violations), 1)
         self.assertEqual(ampersand_violations[0].suggested_fix, "and")
 
+    def test_ampersand_usage_skips_assessment_information_sections(self) -> None:
+        """
+        Test that ampersand usage skips assessment information sections.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
+        checker = SymbolChecker()
+        violations = checker.check((
+            "Assessment > Assessment Information [paragraph 1]",
+            "The habitat includes forest & woodland.",
+        ))
+
+        ampersand_violations = [
+            violation for violation in violations
+            if violation.message == "Use 'and' not '&'"
+        ]
+
+        self.assertEqual(ampersand_violations, [])
+
     def test_area_units_ignore_simple_style_tags(self) -> None:
         """
         Test that area units ignore simple style tags.

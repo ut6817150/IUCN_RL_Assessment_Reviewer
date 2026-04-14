@@ -132,7 +132,9 @@ class GeographyCheckerTests(unittest.TestCase):
         """
         text = (
             "The review mentions North Korea, South Africa, North America, East Asia, "
-            "South & Southeast Asia, and West & Central Asia."
+            "South & Southeast Asia, West & Central Asia, Northern Ireland, East Africa, "
+            "South China Sea, North Carolina, New South Wales, Northwest Territories, "
+            "East Midlands, and North Island."
         )
 
         violations = GeographyChecker().check(("Test Section", text))

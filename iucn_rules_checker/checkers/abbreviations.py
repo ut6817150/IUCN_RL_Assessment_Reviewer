@@ -125,12 +125,12 @@ class AbbreviationChecker(BaseChecker):
         The rule strips simple inline italic, bold, superscript, and subscript
         tags before matching. It then checks these specific patterns only:
         - ``etc`` -> ``etc.``
-        - ``in lit`` -> ``in lit.``
+        - ``in litt`` -> ``in litt.``
         - ``pers comm`` / ``pers comm.`` / ``pers. comm`` -> ``pers. comm.``
         - ``pers obs`` / ``pers obs.`` / ``pers. obs`` -> ``pers. obs.``
         - ``Prof`` -> ``Prof.``
 
-        Already-correct forms such as ``etc.``, ``in lit.``, ``pers. comm.``,
+        Already-correct forms such as ``etc.``, ``in litt.``, ``pers. comm.``,
         ``pers. obs.``, and ``Prof.`` are ignored. Abbreviations outside this
         fixed shortlist, such as ``Rev``, are also ignored.
 
@@ -162,16 +162,16 @@ class AbbreviationChecker(BaseChecker):
                 suggested_fix="etc.",
             ))
 
-        inlit_pattern = re.compile(r'\bin\s+lit\b(?![t.])', re.IGNORECASE)
-        for match in inlit_pattern.finditer(cleaned_text):
+        inlitt_pattern = re.compile(r'\bin\s+litt\b(?!\.)', re.IGNORECASE)
+        for match in inlitt_pattern.finditer(cleaned_text):
             start = index_map[match.start()]
             end = index_map[match.end() - 1] + 1
             violations.append(self.create_violation(
                 section_name=section_name,
                 text=text,
                 span=(start, end),
-                message="Use 'in lit.' not 'in lit', if referring to in published literature",
-                suggested_fix="in lit.",
+                message="Use 'in litt.' not 'in litt', if referring to in published literature",
+                suggested_fix="in litt.",
             ))
 
         perscomm_pattern = re.compile(

@@ -99,18 +99,18 @@ Detailed coverage:
   How it works:
   strips all simple style markers, then applies separate regexes for a fixed shortlist of abbreviations.
   Hard-coded list dependency:
-  this method only checks the abbreviations hardcoded in the source, currently including `etc`, `in lit`, `pers comm`, `pers obs`, and `Prof`.
+  this method only checks the abbreviations hardcoded in the source, currently including `etc`, `in litt`, `pers comm`, `pers obs`, and `Prof`.
 
   - Catches:
     - `etc`, `ETC`
-    - `in lit`, `IN LIT`
+    - `in litt`, `IN LITT`
     - `pers comm`, `pers comm.`, `pers. comm`
     - `pers obs`, `pers obs.`, `pers. obs`
     - `Prof`, `PROF`
-    - `<i>etc</i>`, `<b>in lit</b>`, `<i>Pers</i> <b>Comm</b>`, `<sub>Prof</sub>`
+    - `<i>etc</i>`, `<b>in litt</b>`, `<i>Pers</i> <b>Comm</b>`, `<sub>Prof</sub>`
 
   - Misses:
-    - already-correct `etc.`, `in lit.`, `pers. comm.`, `pers. obs.`
+    - already-correct `etc.`, `in litt.`, `pers. comm.`, `pers. obs.`
     - `Professor Smith`
     - `etcetera`
     - `p e r s comm`
@@ -437,7 +437,7 @@ Detailed coverage:
   - Misses:
     - paragraph-start `Eastern Ecuador contains...`
     - `This changed. Northern Peru contains...`
-    - proper names such as `North Korea`, `South Africa`, `North America`, `East Asia`, `West & Central Asia`
+    - proper names such as `North Korea`, `South Africa`, `North America`, `East Asia`, `West & Central Asia`, `Northern Ireland`, `South China Sea`, `New South Wales`
     - already-lowercase forms such as `eastern Ecuador`
     - proper region names that are not in the checker's allowlists
     - deeper geopolitical reasoning
@@ -957,7 +957,7 @@ Detailed coverage:
 
 - `check_ampersand_usage(...)`
   How it works:
-  strips all simple style markers, then flags every literal `&` and suggests `and`.
+  strips all simple style markers, then flags every literal `&` and suggests `and`. Sections whose name contains `Assessment Information` are skipped.
   Hard-coded scope:
   this method only checks the literal character `&`.
 
@@ -969,6 +969,7 @@ Detailed coverage:
   - Misses:
     - `forest and woodland`
     - text with no literal ampersand
+    - any `&` that appears in an `Assessment Information` section
     - semantic cases where `&` might be intentionally preserved outside this style rule
 
 - `check_area_units(...)`

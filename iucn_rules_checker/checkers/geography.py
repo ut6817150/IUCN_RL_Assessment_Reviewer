@@ -96,17 +96,37 @@ class GeographyChecker(BaseChecker):
     }
 
     RECOGNISED_REGIONS = {
+        # Countries and sovereign states.
+        'East Timor',
+        'Western Sahara',
+        'Equatorial Guinea',
+        'Central African Republic',
+        'Northern Ireland',
+
+        # Continents and major world regions.
         'Africa',
         'North Africa',
+        'East Africa',
+        'West Africa',
+        'Southern Africa',
+        'Central Africa',
         'Sub-Saharan Africa',
         'Antarctica',
         'Antarctic',
         'Asia',
         'East Asia',
+        'Southeast Asia',
+        'South Asia',
+        'West Asia',
         'North Asia',
         'South & Southeast Asia',
         'West & Central Asia',
         'Europe',
+        'Eastern Europe',
+        'Western Europe',
+        'Northern Europe',
+        'Southern Europe',
+        'Middle East',
         'Americas',
         'North America',
         'Mesoamerica',
@@ -114,6 +134,64 @@ class GeographyChecker(BaseChecker):
         'Caribbean Islands',
         'South America',
         'Oceania',
+
+        # Oceans, seas, and major water bodies.
+        'North Sea',
+        'South China Sea',
+        'East China Sea',
+        'North Atlantic',
+        'South Atlantic',
+        'North Pacific',
+        'South Pacific',
+        'Southern Ocean',
+
+        # US states and territories.
+        'North Carolina',
+        'South Carolina',
+        'North Dakota',
+        'South Dakota',
+        'West Virginia',
+
+        # Australian states and territories.
+        'New South Wales',
+        'Northern Territory',
+        'South Australia',
+        'Western Australia',
+
+        # Canadian provinces and territories.
+        'Northwest Territories',
+
+        # UK and Ireland regions.
+        'East Anglia',
+        'North Yorkshire',
+        'South Yorkshire',
+        'West Yorkshire',
+        'East Yorkshire',
+        'West Midlands',
+        'East Midlands',
+        'Western Isles',
+
+        # Other notable named regions and territories.
+        'North Caucasus',
+        'South Georgia',
+        'South Sandwich Islands',
+        'Northern Mariana Islands',
+        'Southwest Pacific',
+        'Eastern Cape',
+        'Eastern Cape (South Africa)',
+        'Western Cape',
+        'Western Cape (South Africa)',
+        'Northern Cape',
+        'Northern Cape (South Africa)',
+        'North Island',
+        'North Island (New Zealand)',
+        'South Island',
+        'South Island (New Zealand)',
+        'South Downs',
+        'North Downs',
+        'West Country',
+        'North Andaman',
+        'South Andaman',
     }
 
     def __init__(self):
@@ -276,6 +354,8 @@ class GeographyChecker(BaseChecker):
         `East Asia`
         `South & Southeast Asia`
         `West & Central Asia`
+        direction-led subphrases inside a larger proper name such as
+        `South Wales` within `New South Wales`
 
         Examples not checked:
         already-lowercase forms such as `eastern Ecuador`
@@ -314,6 +394,8 @@ class GeographyChecker(BaseChecker):
             if match.start() == 0 or cleaned_text[:match.start()].endswith(". "):
                 continue
             if matched_phrase.lower() in allowed_phrases:
+                continue
+            if self.is_within_known_country_or_region(cleaned_text, match.span()):
                 continue
 
             corrected = f"{match.group('direction').lower()}{match.group('rest')}"
