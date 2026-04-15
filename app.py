@@ -67,6 +67,7 @@ LLM_TAB_CONFIGS = {
         "reasoning_enabled": True,
     },
 }
+CUSTOM_LLM_OPTION = "configure your own LLM"
 
 # Initialise UI for document upload
 st.set_page_config(page_title="IUCN Assessment Feedback Tool", layout="wide")
@@ -236,7 +237,7 @@ with rules_tab:
 
                 error_label = "error" if len(rows) == 1 else "errors"
                 with st.expander(f"{section_name} ({len(rows)} {error_label})", expanded=False):
-                    st.dataframe(table, use_container_width=True, hide_index=True)
+                    st.dataframe(table, width="stretch", hide_index=True)
 
             # enable download of raw violations for debugging
             st.download_button(
@@ -255,25 +256,45 @@ with llm_tab:
     st.subheader("LLM feedback")
     st.write("Run the simplified LLM reviewer separately from the rules-based checks.")
 
-    # Let the user choose which model powers the LLM review.
+    # Let the user choose either a preset OpenRouter model or provide a custom
+    # OpenRouter model slug while reusing the app's existing connection settings.
     selected_llm_label = st.selectbox(
         "Choose LLM",
-        options=list(LLM_TAB_CONFIGS.keys()),
+        options=[*LLM_TAB_CONFIGS.keys(), CUSTOM_LLM_OPTION],
         index=0,
         key="llm_tab_model_choice",
     )
-    selected_llm_config = LLM_TAB_CONFIGS[selected_llm_label]
+
+    custom_llm_model = ""
+    if selected_llm_label == CUSTOM_LLM_OPTION:
+        custom_llm_model = st.text_input(
+            "Enter OpenRouter model slug",
+            key="llm_custom_model_slug",
+            placeholder="e.g. openai/gpt-oss-120b:free",
+        ).strip()
+        selected_llm_config = {
+            "base_url": "https://openrouter.ai/api/v1/chat/completions",
+            "model": custom_llm_model,
+            "api_key": OPENROUTER_API_KEY,
+            "reasoning_enabled": True,
+        }
+    else:
+        selected_llm_config = LLM_TAB_CONFIGS[selected_llm_label]
+
     st.caption(
         f"Selected config: OpenRouter model `{selected_llm_config['model']}` "
         f"with reasoning `{'on' if selected_llm_config['reasoning_enabled'] else 'off'}`."
     )
+
+    if selected_llm_label == CUSTOM_LLM_OPTION and not custom_llm_model:
+        st.info("Enter an OpenRouter model slug to enable the custom LLM option.")
     
     # Only generate feedback when the user clicks the generate feedback button on UI
     if st.button(
         "Generate feedback",
         key="generate_llm_feedback",
         type="primary",
-        disabled=not input_ready,
+        disabled=not input_ready or (selected_llm_label == CUSTOM_LLM_OPTION and not custom_llm_model),
     ):
         with st.spinner("Generating LLM feedback..."):
             # Convert the uploaded document once, then pass the parsed
@@ -396,7 +417,7 @@ with rag_tab:
             "Clear RAG chat",
             key="clear_rag_chat",
             disabled=not st.session_state["rag_messages"],
-            use_container_width=True,
+            width="stretch",
         ):
             # Clear only the chat transcript; the cached draft store is reused
             # until a new document is uploaded.

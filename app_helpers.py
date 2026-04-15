@@ -51,6 +51,7 @@ def build_downloadable_feedback_excel(
     llm_columns = [
         "Rule name",
         "Report section",
+        "Severity",
         "Feedback",
         "Suggestion",
     ]
@@ -79,6 +80,7 @@ def build_downloadable_feedback_excel(
                     {
                         "Rule name": rule_name,
                         "Report section": finding.get("section_path") or "",
+                        "Severity": finding.get("severity") or "",
                         "Feedback": finding.get("issue") or "",
                         "Suggestion": finding.get("suggestion") or "",
                     }
