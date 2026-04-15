@@ -17,6 +17,7 @@ try:
     from .checkers.scientific import ScientificNameChecker
     from .checkers.spelling import SpellingChecker
     from .checkers.symbols import SymbolChecker
+    from .checkers.tables import TableChecker
     from .violation import Violation
 except ImportError:  # pragma: no cover - direct script execution fallback
     from checkers.abbreviations import AbbreviationChecker
@@ -32,6 +33,7 @@ except ImportError:  # pragma: no cover - direct script execution fallback
     from checkers.scientific import ScientificNameChecker
     from checkers.spelling import SpellingChecker
     from checkers.symbols import SymbolChecker
+    from checkers.tables import TableChecker
     from violation import Violation
 
 
@@ -45,7 +47,7 @@ class IUCNAssessmentReviewer:
 
     def __init__(self):
         """
-        Initialise the bibliography-only checker and the standard checker pipeline.
+        Initialise the table-only checker, bibliography-only checker, and standard checker pipeline.
 
         Args:
             None.
@@ -54,9 +56,10 @@ class IUCNAssessmentReviewer:
             None (mutates ``self.bibliography_checker`` and ``self.checkers``).
 
         Notes:
-            Bibliography sections are reviewed separately so they can run a
-            smaller, bibliography-focused rule set than the rest of the report.
+            Table and bibliography sections are reviewed separately so they can
+            run smaller, section-specific rule sets than the rest of the report.
         """
+        self.table_checker = TableChecker()
         self.bibliography_checker = BibliographyChecker()
         self.checkers: List[BaseChecker] = [
             AbbreviationChecker(),
@@ -110,6 +113,7 @@ class IUCNAssessmentReviewer:
             raise TypeError("review_full_report() expects a dict of section paths to text.")
 
         violations: List[Violation] = []
+        self.table_checker.begin_sweep()
         self.bibliography_checker.begin_sweep()
         for checker in self.checkers:
             checker.begin_sweep()
@@ -118,18 +122,20 @@ class IUCNAssessmentReviewer:
             for section_name, section_text in full_report.items():
                 if not section_text.strip():
                     continue
-                if self.is_table_section(section_name):
-                    continue
-
                 section_item = (section_name, section_text)
 
+                if self.is_table_section(section_name):
+                    violations.extend(self.table_checker.check_text(*section_item))
+                    continue
+
                 if self.is_bibliography_section(section_name):
-                    violations.extend(self.bibliography_checker.check(section_item))
+                    violations.extend(self.bibliography_checker.check_text(*section_item))
                     continue
 
                 for checker in self.checkers:
-                    violations.extend(checker.check(section_item))
+                    violations.extend(checker.check_text(*section_item))
         finally:
+            self.table_checker.end_sweep()
             self.bibliography_checker.end_sweep()
             for checker in self.checkers:
                 checker.end_sweep()

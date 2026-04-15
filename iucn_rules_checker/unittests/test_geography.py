@@ -28,7 +28,7 @@ class GeographyCheckerTests(unittest.TestCase):
             "Older records also mention Burma and Holland."
         )
 
-        violations = GeographyChecker().check(("Test Section", text))
+        violations = GeographyChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("Use ISO 3166 country name: 'Viet Nam' instead of 'Vietnam'", messages)
@@ -51,7 +51,7 @@ class GeographyCheckerTests(unittest.TestCase):
             "It was later recorded from Argetina and distributed in Phillipines."
         )
 
-        violations = GeographyChecker().check(("Test Section", text))
+        violations = GeographyChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("Use ISO 3166 country name: 'Afghanistan' instead of 'Afganistan'", messages)
@@ -73,7 +73,7 @@ class GeographyCheckerTests(unittest.TestCase):
             "It also occurs in the Republic of the Congo."
         )
 
-        violations = GeographyChecker().check(("Test Section", text))
+        violations = GeographyChecker().check_text("Test Section", text)
 
         self.assertEqual(violations, [])
 
@@ -92,7 +92,7 @@ class GeographyCheckerTests(unittest.TestCase):
             "Older records also mention <sup>La</sup><sub>os</sub>."
         )
 
-        violations = GeographyChecker().check(("Test Section", text))
+        violations = GeographyChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("Use ISO 3166 country name: 'Viet Nam' instead of 'Vietnam'", messages)
@@ -113,7 +113,7 @@ class GeographyCheckerTests(unittest.TestCase):
             "It is also found across Western Colombia."
         )
 
-        violations = GeographyChecker().check(("Test Section", text))
+        violations = GeographyChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("'Eastern Ecuador' should be lower case (unless it is a proper region name)", messages)
@@ -137,7 +137,7 @@ class GeographyCheckerTests(unittest.TestCase):
             "East Midlands, and North Island."
         )
 
-        violations = GeographyChecker().check(("Test Section", text))
+        violations = GeographyChecker().check_text("Test Section", text)
         direction_messages = [
             violation.message for violation in violations
             if "should be lower case" in violation.message
@@ -160,7 +160,7 @@ class GeographyCheckerTests(unittest.TestCase):
             "It is also found in <i>North</i> America."
         )
 
-        violations = GeographyChecker().check(("Test Section", text))
+        violations = GeographyChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("'Eastern Ecuador' should be lower case (unless it is a proper region name)", messages)
@@ -181,7 +181,7 @@ class GeographyCheckerTests(unittest.TestCase):
             "This changed. Northern Peru still contains suitable habitat."
         )
 
-        violations = GeographyChecker().check(("Test Section", text))
+        violations = GeographyChecker().check_text("Test Section", text)
         direction_messages = [
             violation.message for violation in violations
             if "should be lower case" in violation.message

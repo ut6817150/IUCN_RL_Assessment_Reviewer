@@ -7,8 +7,6 @@ from typing import List, Optional, Tuple
 
 from ..violation import Violation
 
-SectionItem = Tuple[str, str]
-
 
 class BaseChecker(ABC):
     """
@@ -39,19 +37,6 @@ class BaseChecker(ABC):
         Returns:
             None: Value produced by this method.
         """
-
-    def check(self, section_item: SectionItem) -> List[Violation]:
-        """
-        Run this checker against one parsed ``(section_name, text)`` pair.
-
-        Args:
-            section_item (SectionItem): Parsed ``(section_name, text)`` pair supplied by the caller.
-
-        Returns:
-            List[Violation]: Violations produced by this method.
-        """
-        section_name, text = section_item
-        return self.check_text(section_name, text)
 
     def strip_style_markers(
         self,

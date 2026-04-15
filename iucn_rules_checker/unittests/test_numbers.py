@@ -25,7 +25,7 @@ class NumberCheckerTests(unittest.TestCase):
         """
         text = "There were 3 locations and 2 subpopulations across 4 valleys"
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("Numbers 1-9 should be written out: '3' should be 'three'", messages)
@@ -50,7 +50,7 @@ class NumberCheckerTests(unittest.TestCase):
             "Decimal values such as 1.5 were also recorded."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         small_number_messages = [
             violation.message for violation in violations
             if violation.message.startswith("Numbers 1-9 should be written out:")
@@ -76,7 +76,7 @@ class NumberCheckerTests(unittest.TestCase):
             "Volume reached 3 m3 and area reached 4 km2."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         small_number_messages = [
             violation.message for violation in violations
             if violation.message.startswith("Numbers 1-9 should be written out:")
@@ -99,7 +99,7 @@ class NumberCheckerTests(unittest.TestCase):
             "The area was 4 km<sup>2</sup> and another patch was 5 m<sub>2</sub>."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         messages = [
             violation.message for violation in violations
             if violation.message.startswith("Numbers 1-9 should be written out:")
@@ -122,7 +122,7 @@ class NumberCheckerTests(unittest.TestCase):
         """
         text = "There were 3 records and 2 notes in the bibliography."
 
-        violations = NumberChecker().check(("Assessment > Bibliography [paragraph 1]", text))
+        violations = NumberChecker().check_text("Assessment > Bibliography [paragraph 1]", text)
         messages = [
             violation.message for violation in violations
             if violation.message.startswith("Numbers 1-9 should be written out:")
@@ -152,7 +152,7 @@ class NumberCheckerTests(unittest.TestCase):
             "Precise values include 1234567 and 9876543210."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         messages = [
             violation.message for violation in violations
             if violation.message.startswith("For rounded numbers >= 1 million")
@@ -183,7 +183,7 @@ class NumberCheckerTests(unittest.TestCase):
             "A precise value of <sup>1234567</sup> should still be ignored."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         messages = [
             violation.message for violation in violations
             if violation.message.startswith("For rounded numbers >= 1 million")
@@ -208,7 +208,7 @@ class NumberCheckerTests(unittest.TestCase):
             "A rounded total of <i>1500000</i> individuals was also reported."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
         large_number_messages = [
             message for message in messages
@@ -240,7 +240,7 @@ class NumberCheckerTests(unittest.TestCase):
             "Correct values included 1,234 and 1,234.56."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         large_number_messages = [
             violation.message for violation in violations
             if violation.message.startswith("Use standard comma placement for numbers:")
@@ -285,7 +285,7 @@ class NumberCheckerTests(unittest.TestCase):
             "A plain large number 1234 still appears in prose."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         large_number_messages = [
             violation.message for violation in violations
             if violation.message.startswith("Use standard comma placement for numbers:")
@@ -310,7 +310,7 @@ class NumberCheckerTests(unittest.TestCase):
         """
         text = "Ticket #2916 was resolved, while 1234 records still need grouping."
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         large_number_messages = [
             violation.message for violation in violations
             if violation.message.startswith("Use standard comma placement for numbers:")
@@ -338,7 +338,7 @@ class NumberCheckerTests(unittest.TestCase):
             "Was it revised? <sup>12</sup> records were added."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         messages = [
             violation.message for violation in violations
             if violation.message == "Do not start sentences with numerals; write the number out or rephrase"
@@ -361,7 +361,7 @@ class NumberCheckerTests(unittest.TestCase):
             "3 surveys were completed later."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         matched_texts = [
             violation.matched_text for violation in violations
             if violation.message == "Do not start sentences with numerals; write the number out or rephrase"
@@ -384,7 +384,7 @@ class NumberCheckerTests(unittest.TestCase):
             "4 surveys were completed later."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         matched_texts = [
             violation.matched_text for violation in violations
             if violation.message == "Do not start sentences with numerals; write the number out or rephrase"
@@ -407,7 +407,7 @@ class NumberCheckerTests(unittest.TestCase):
             "5 records were added later."
         )
 
-        violations = NumberChecker().check(("Test Section", text))
+        violations = NumberChecker().check_text("Test Section", text)
         matched_texts = [
             violation.matched_text for violation in violations
             if violation.message == "Do not start sentences with numerals; write the number out or rephrase"
@@ -427,7 +427,7 @@ class NumberCheckerTests(unittest.TestCase):
         """
         text = "3 entries were reviewed. Martinez et al. 2006 described the site."
 
-        violations = NumberChecker().check(("Assessment > Bibliography [paragraph 1]", text))
+        violations = NumberChecker().check_text("Assessment > Bibliography [paragraph 1]", text)
         messages = [
             violation.message for violation in violations
             if violation.message == "Do not start sentences with numerals; write the number out or rephrase"

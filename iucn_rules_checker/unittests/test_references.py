@@ -24,10 +24,10 @@ class ReferenceCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = ReferenceChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Examples include (Smith, 2020) and (Mishra et al., 2015)."
-        ))
+        )
 
         citation_violations = [
             violation for violation in violations
@@ -51,11 +51,11 @@ class ReferenceCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = ReferenceChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Examples include (<i>Smith</i>, <b>2020</b>) and "
             "(<sup>Mishra et al.</sup>, <sub>2015</sub>)."
-        ))
+        )
 
         citation_violations = [
             violation for violation in violations
@@ -79,10 +79,10 @@ class ReferenceCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = ReferenceChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Examples include (Smith 2020), [GBIF.org, 2021], and Smith, 2020."
-        ))
+        )
 
         citation_violations = [
             violation for violation in violations

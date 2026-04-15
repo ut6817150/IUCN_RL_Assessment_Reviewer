@@ -151,6 +151,50 @@ class FormattingCheckerTests(unittest.TestCase):
 
         self.assertEqual(violations, [])
 
+    def test_higher_order_taxonomy_formatting_checks_supplemental_names_only_after_ladder_harvest(self) -> None:
+        """
+        Test that higher order taxonomy formatting checks supplemental names only after ladder harvest.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
+        checker = FormattingChecker()
+
+        pre_harvest_violations = checker.check_higher_order_taxonomy_formatting(
+            "Formatting Section",
+            "plantae appears before any taxonomy ladder.",
+        )
+        self.assertEqual(pre_harvest_violations, [])
+
+        checker.begin_sweep()
+        try:
+            ladder_text = (
+                "FUNGI - ASCOMYCOTA - SORDARIOMYCETES - HYPOCREALES - "
+                "NECTRIACEAE - Fusarium - oxysporum"
+            )
+            later_text = "plantae appears after a non-plantae ladder entry."
+
+            ladder_violations = checker.check_higher_order_taxonomy_formatting(
+                "Formatting Section",
+                ladder_text,
+            )
+            later_violations = checker.check_higher_order_taxonomy_formatting(
+                "Formatting Section",
+                later_text,
+            )
+
+            self.assertEqual(ladder_violations, [])
+            later_messages = [violation.message for violation in later_violations]
+            self.assertIn(
+                "Family/taxonomy names should be capitalized and not italicized: 'Plantae'",
+                later_messages,
+            )
+        finally:
+            checker.end_sweep()
+
     def test_higher_order_taxonomy_formatting_strips_non_italic_style_markers(self) -> None:
         """
         Test that higher order taxonomy formatting strips non italic style markers.
@@ -296,6 +340,53 @@ class FormattingCheckerTests(unittest.TestCase):
             "Acrocarpus and fraxinifolius appear here.",
         )
         self.assertEqual(cleared_violations, [])
+
+    def test_genus_and_species_rule_checks_supplemental_names_only_after_ladder_harvest(self) -> None:
+        """
+        Test that genus and species rule checks supplemental names only after ladder harvest.
+
+        Args:
+            None.
+
+        Returns:
+            None. The assertions inside the test body enforce the expected behavior.
+        """
+        checker = FormattingChecker()
+
+        pre_harvest_violations = checker.check_genus_and_species(
+            "Formatting Section",
+            "Chlidanthus and ariruma appear before any taxonomy ladder.",
+        )
+        self.assertEqual(pre_harvest_violations, [])
+
+        checker.begin_sweep()
+        try:
+            ladder_text = (
+                "FUNGI - ASCOMYCOTA - SORDARIOMYCETES - HYPOCREALES - "
+                "NECTRIACEAE - Fusarium - oxysporum"
+            )
+            later_text = (
+                "Chlidanthus appears in plain text. "
+                "chlidanthus also appears in plain text. "
+                "ariruma appears in plain text. "
+                "Ariruma appears in plain text."
+            )
+
+            ladder_violations = checker.check_genus_and_species("Formatting Section", ladder_text)
+            later_violations = checker.check_genus_and_species("Formatting Section", later_text)
+
+            self.assertEqual(ladder_violations, [])
+            later_messages = [violation.message for violation in later_violations]
+            self.assertEqual(
+                later_messages.count("Scientific names should be italicized and use correct case: '<i>Chlidanthus</i>'"),
+                2,
+            )
+            self.assertEqual(
+                later_messages.count("Scientific names should be italicized and use correct case: '<i>ariruma</i>'"),
+                2,
+            )
+        finally:
+            checker.end_sweep()
 
     def test_genus_and_species_rule_strips_non_italic_style_markers(self) -> None:
         """

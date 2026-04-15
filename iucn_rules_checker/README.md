@@ -115,13 +115,21 @@ The intended workflow is explicitly two-step:
 Current reviewer behavior:
 
 - skips empty sections
-- skips parsed table sections entirely
+- routes parsed table sections to a dedicated `TableChecker`
 - routes bibliography sections to a dedicated `BibliographyChecker`
-- runs all other non-table sections through the normal checker list
+- runs all other non-table, non-bibliography sections through the normal checker list
 - calls `begin_sweep()` on every checker before a review pass
 - calls `end_sweep()` on every checker after the pass finishes
 
 ### Section Routing
+
+Parsed table sections are routed to `self.table_checker` only:
+
+- `TableChecker`
+
+Current `TableChecker` behavior combines:
+
+- `AbbreviationChecker.check_et_al(...)`
 
 Normal non-bibliography sections are checked by `self.checkers`:
 
@@ -154,6 +162,7 @@ from iucn_rules_checker.assessment_reviewer import IUCNAssessmentReviewer
 
 full_report = {
     "Assessment > Notes [paragraph 1]": "Examples occur e.g. in text.",
+    "Assessment > Notes [table 1] [row 1]": "Smith et al. 2020",
     "Assessment > Bibliography [paragraph 1]": "Smith & Jones 2020. Journal 10-20.",
 }
 
@@ -225,9 +234,9 @@ All checker classes inherit from `checkers/base.py`.
 
 Shared methods include:
 
-- `check((section_name, text))`
 - `begin_sweep()`
 - `end_sweep()`
+- `check_text(section_name, text)`
 - `strip_style_markers(...)`
 - `create_violation(...)`
 - `normalize_section_name(...)`

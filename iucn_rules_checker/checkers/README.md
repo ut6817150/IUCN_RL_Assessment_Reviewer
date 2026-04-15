@@ -20,8 +20,9 @@ Method reference:
 - `end_sweep(...)`
   Hook called after a full parsed report is reviewed.
   The base implementation does nothing.
-- `check(...)`
-  Unpacks one `(section_name, text)` tuple and delegates to `check_text(...)`.
+- `check_text(...)`
+  Common checker entry point that receives one `(section_name, text)` pair and
+  returns that checker's `Violation` list.
 - `strip_style_markers(...)`
   Removes selected inline HTML-style markers and returns both cleaned text and
   an `index_map` back into the original text.
@@ -317,9 +318,9 @@ Detailed coverage:
 
 - `check_genus_and_species(...)`
   How it works:
-  strips bold, superscript, and subscript tags but preserves italics, harvests genus/species names from ladder entries such as `PLANTAE - ... - Acrocarpus - fraxinifolius`, and then checks later occurrences of those harvested names for expected italics and case.
+  strips bold, superscript, and subscript tags but preserves italics, harvests genus/species names from ladder entries such as `PLANTAE - ... - Acrocarpus - fraxinifolius`, and then checks later occurrences of those harvested names for expected italics and case. It also checks a very small fixed supplemental genus/species list, currently `Chlidanthus` and `ariruma`, but only after some taxonomy ladder has already been harvested in the same sweep.
   Hard-coded/structural dependency:
-  this method depends on seeing a ladder-shaped taxonomy entry first; without a harvested genus/species pair, it has nothing to check.
+  this method depends on seeing a ladder-shaped taxonomy entry first; without a harvested genus/species pair, it does not check either the harvested names or the supplemental list.
 
   - Catches:
     - `Acrocarpus` after harvest when it is plain text instead of italicized
@@ -327,26 +328,31 @@ Detailed coverage:
     - `fraxinifolius` when it is plain text
     - `Fraxinifolius`
     - `<i>Fraxinifolius</i>`
+    - `Chlidanthus` after any ladder harvest when it is plain text instead of italicized
+    - `ariruma` after any ladder harvest when it is plain text instead of italicized
 
   - Misses:
     - the taxonomy ladder entry itself
     - names before any ladder has been harvested in the current sweep
-    - unrelated genus/species names that do not match the harvested pair
+    - `Chlidanthus` or `ariruma` before any ladder has been harvested in the current sweep
+    - unrelated genus/species names that do not match the harvested pair or the supplemental list
     - Markdown italics such as `*Acrocarpus*`
     - assessments where the taxonomy ladder is missing or written in a different structure
 
 - `check_higher_order_taxonomy_formatting(...)`
   How it works:
-  strips non-italic style tags, harvests higher taxonomy names from ladder entries, then checks later occurrences of those harvested names for two conditions: correct capitalization and no italics.
+  strips non-italic style tags, harvests higher taxonomy names from ladder entries, then checks later occurrences of those harvested names for two conditions: correct capitalization and no italics. It also checks a very small fixed supplemental list of higher-order names, currently only `Plantae`, but only after some taxonomy ladder has already been harvested in the same sweep.
   Hard-coded/structural dependency:
-  this method depends on seeing a ladder-shaped taxonomy entry first; it no longer infers higher taxa from suffixes alone.
+  this method depends on seeing a ladder-shaped taxonomy entry first; it no longer infers higher taxa from suffixes alone, and the supplemental list is inactive until that ladder harvest has happened.
 
   - Catches:
     - harvested names reused later such as `plantae` or `<i>Magnoliopsida</i>`
     - harvested names reused later such as `<i>Fabaceae</i>`
+    - supplemental names such as `plantae`, but only after any valid ladder has already been harvested in the current sweep
 
   - Misses:
     - literal rank labels such as `family`, `order`, `class`
+    - `Plantae` / `plantae` before any ladder has been harvested in the current sweep
     - non-harvested family-like names such as `orchidaceae` or `Felidae`
     - Markdown italics
     - taxonomic truth; it checks style, not biological correctness
@@ -826,6 +832,74 @@ Aggregated misses for `BibliographyChecker`:
 - it only checks ampersands plus the embedded `et al.` and range-dash rules
 - it does not check DOI, URL, title, journal, page, or author-order formatting
 
+### `tables.py` - `TableChecker`
+
+Category: `Tables`
+
+Aggregated method list:
+- `begin_sweep(...)`
+  Starts the embedded helper checker used by table review.
+- `check_text(...)`
+  Runs the table-specific imported rule set.
+- `end_sweep(...)`
+  Ends the embedded helper checker used by table review.
+- `is_table_section(...)`
+  Detects parsed table-row section names.
+
+Detailed coverage:
+
+- `begin_sweep(...)`
+  How it works:
+  forwards `begin_sweep()` to the embedded `AbbreviationChecker` helper.
+
+  - Catches:
+    - no violations; this is lifecycle setup only
+
+  - Misses:
+    - all text checking, because it does not inspect text directly
+
+- `check_text(...)`
+  How it works:
+  returns no violations unless `section_name` represents parsed table content. In table sections, it combines:
+  - `AbbreviationChecker.check_et_al(...)`
+
+  The imported helper method keeps its original `rule_class` and `rule_method` values, so table output still contains `AbbreviationChecker` violations.
+  Hard-coded/structural dependency:
+  this dispatcher depends on the table-section naming pattern and on the behavior of the embedded abbreviation helper.
+
+  - Catches:
+    - table `et al.` issues such as `Smith et al. 2020`
+
+  - Misses:
+    - all non-table sections
+    - table issues outside the imported `et al.` rule
+    - any broader table parsing beyond what `AbbreviationChecker.check_et_al(...)` already does
+
+- `end_sweep(...)`
+  How it works:
+  forwards `end_sweep()` to the embedded `AbbreviationChecker` helper.
+
+  - Catches:
+    - no violations; this is lifecycle cleanup only
+
+  - Misses:
+    - all text checking, because it does not inspect text directly
+
+- `is_table_section(...)`
+  How it works:
+  uses the parsed section-name suffix pattern `[table N]` to detect table-derived content.
+
+  - Catches:
+    - no violations; this is routing support only
+
+  - Misses:
+    - any text checking, because it only inspects section names
+
+Aggregated misses for `TableChecker`:
+- it only checks the embedded `et al.` rule
+- it does not validate general table wording or table structure
+- it relies on parsed section names using the expected `[table N]` pattern
+
 ### `references.py` - `ReferenceChecker`
 
 Category: `References`
@@ -936,8 +1010,8 @@ Category: `Symbols`
 
 Current default reviewer:
 included in the standard non-bibliography `IUCNAssessmentReviewer` flow.
-Bibliography sections still do not use `SymbolChecker`, because those sections
-are routed to `BibliographyChecker` only.
+Bibliography and table sections still do not use `SymbolChecker`, because those
+sections are routed to `BibliographyChecker` and `TableChecker` only.
 
 Aggregated method list:
 - `check_ampersand_usage(...)`

@@ -20,6 +20,16 @@ class FormattingChecker(BaseChecker):
         This class groups related rules within the rules-based assessment workflow.
     """
 
+    SUPPLEMENTAL_HIGHER_ORDER_TAXONOMY_NAMES = {
+        'Plantae',
+    }
+    SUPPLEMENTAL_GENUS_NAMES = {
+        'Chlidanthus',
+    }
+    SUPPLEMENTAL_SPECIES_NAMES = {
+        'ariruma',
+    }
+
     def __init__(self):
         """
         Initialise sweep-level state for harvested taxonomy names.
@@ -194,8 +204,10 @@ class FormattingChecker(BaseChecker):
         Instead, it harvests the all-uppercase higher-order taxonomy names,
         normalizes them to title case (for example ``FABACEAE`` -> ``Fabaceae``),
         stores them temporarily, and uses them while checking the remaining
-        sections in the same sweep. The temporary list is cleared when the
-        sweep ends.
+        sections in the same sweep. A small fixed supplemental list of
+        higher-order taxonomy names is also checked, but only after at least
+        one taxonomy ladder has been harvested in the current sweep. The
+        temporary harvested list is cleared when the sweep ends.
 
         It then checks two things at once for those harvested names:
         - whether the name starts with a capital letter
@@ -213,6 +225,7 @@ class FormattingChecker(BaseChecker):
         Examples not flagged:
         - the taxonomy ladder entry that supplied the harvested names
         - harvested names already written in correct title case without italics
+        - ``Plantae`` or ``plantae`` before any ladder harvest
         - ``orchidaceae`` or ``Felidae`` before any ladder harvest
         - non-harvested taxonomy-like words, because this method no longer
           infers names from suffixes alone
@@ -234,11 +247,18 @@ class FormattingChecker(BaseChecker):
 
         if self.collect_taxonomy_names_from_ladder(cleaned_text):
             return []
+        if not self._collected_higher_taxonomy_names:
+            return []
 
         violations = []
         seen_matches = set()
 
-        for proper_name in sorted(self._collected_higher_taxonomy_names, key=len, reverse=True):
+        names_to_check = (
+            self._collected_higher_taxonomy_names
+            | self.SUPPLEMENTAL_HIGHER_ORDER_TAXONOMY_NAMES
+        )
+
+        for proper_name in sorted(names_to_check, key=len, reverse=True):
             for cleaned_span, message, suggested_fix in self.find_taxonomy_name_violations(cleaned_text, proper_name):
                 original_span = (
                     index_map[cleaned_span[0]],
@@ -276,7 +296,10 @@ class FormattingChecker(BaseChecker):
 
         The ladder entry itself is not checked for violations by this method.
         Instead, the harvested genus and species are stored temporarily and
-        checked against the remaining sections in the same sweep.
+        checked against the remaining sections in the same sweep. A small fixed
+        supplemental genus/species list is also checked, but only after at
+        least one taxonomy ladder has already been harvested in the current
+        sweep.
 
         The applied rules are:
         - occurrences of the genus must be italicized
@@ -295,6 +318,7 @@ class FormattingChecker(BaseChecker):
         - the taxonomy ladder entry that provided the genus/species names
         - ``<i>Acrocarpus</i>``
         - ``<i>fraxinifolius</i>``
+        - ``Chlidanthus`` or ``ariruma`` before any ladder has been harvested
         - names before any taxonomy ladder has been harvested in the current sweep
 
         Args:
@@ -314,11 +338,15 @@ class FormattingChecker(BaseChecker):
 
         if self.collect_taxonomy_names_from_ladder(cleaned_text):
             return []
+        if not self._collected_genus_name or not self._collected_species_name:
+            return []
 
         violations = []
+        genus_names = {self._collected_genus_name} | self.SUPPLEMENTAL_GENUS_NAMES
+        species_names = {self._collected_species_name} | self.SUPPLEMENTAL_SPECIES_NAMES
         name_rules = (
-            (self._collected_genus_name, True),
-            (self._collected_species_name, False),
+            *[(name, True) for name in sorted(genus_names)],
+            *[(name, False) for name in sorted(species_names)],
         )
 
         for proper_name, should_be_capitalized in name_rules:

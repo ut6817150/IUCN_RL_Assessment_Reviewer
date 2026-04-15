@@ -24,10 +24,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "The habitat includes forest & woodland and grassland & wetland.",
-        ))
+        )
 
         ampersand_violations = [
             violation for violation in violations
@@ -48,10 +48,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "<i>forest</i> <b>&</b> woodland",
-        ))
+        )
 
         ampersand_violations = [
             violation for violation in violations
@@ -72,10 +72,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Assessment Information [paragraph 1]",
             "The habitat includes forest & woodland.",
-        ))
+        )
 
         ampersand_violations = [
             violation for violation in violations
@@ -95,10 +95,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Area measured <i>sq</i> <i>km</i>, <b>km2</b>, <i>m</i><i>2</i>, <b>cm2</b>, and <i>mm</i><i>2</i>."
-        ))
+        )
 
         area_messages = [
             violation.message for violation in violations
@@ -127,10 +127,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Area measured <i>km²</i> and <b>m²</b>."
-        ))
+        )
 
         area_messages = [
             violation.message for violation in violations
@@ -275,10 +275,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Success was <i>12</i><i>.5</i> percent and failure was <b>7.25 per cent</b>."
-        ))
+        )
 
         percentage_violations = [
             violation for violation in violations
@@ -301,10 +301,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Success was <i>12.5%</i> and failure was <b>7.25%</b>."
-        ))
+        )
 
         percentage_violations = [
             violation for violation in violations
@@ -324,10 +324,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Success was <i>12</i> <b>%</b>."
-        ))
+        )
 
         spacing_violations = [
             violation for violation in violations
@@ -372,10 +372,10 @@ class SymbolCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SymbolChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Distance was <i>12</i><b>km</b>."
-        ))
+        )
 
         unit_violations = [
             violation for violation in violations

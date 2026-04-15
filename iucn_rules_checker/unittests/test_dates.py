@@ -30,7 +30,7 @@ class DateCheckerTests(unittest.TestCase):
             "A final update cites 4th Sept. and 5th Dec."
         )
 
-        violations = DateChecker().check(("Test Section", text))
+        violations = DateChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertEqual(len(violations), 6)
@@ -58,7 +58,7 @@ class DateCheckerTests(unittest.TestCase):
             "A malformed note even said 0th January."
         )
 
-        violations = DateChecker().check(("Test Section", text))
+        violations = DateChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertEqual(len(violations), 4)
@@ -83,7 +83,7 @@ class DateCheckerTests(unittest.TestCase):
             "A second note refers to the twenty first century."
         )
 
-        violations = DateChecker().check(("Test Section", text))
+        violations = DateChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertEqual(len(violations), 2)
@@ -105,7 +105,7 @@ class DateCheckerTests(unittest.TestCase):
             "Another draft mentions <i>1980</i><b>'s</b> records."
         )
 
-        violations = DateChecker().check(("Test Section", text))
+        violations = DateChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertTrue(any("11 January" in message for message in messages))

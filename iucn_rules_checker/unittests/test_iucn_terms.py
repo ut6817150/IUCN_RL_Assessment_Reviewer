@@ -28,7 +28,7 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             "Another line mentions <sup>the</sup> <sub>IUCN</sub> categories."
         )
 
-        violations = IUCNTermsChecker().check(("Test Section", text))
+        violations = IUCNTermsChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertEqual(messages.count("Use 'IUCN' not 'the IUCN'"), 2)
@@ -49,7 +49,7 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             "Words like concern, species, and icefield should not match."
         )
 
-        violations = IUCNTermsChecker().check(("Test Section", text))
+        violations = IUCNTermsChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertEqual(
@@ -73,7 +73,7 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             "But species and icefield should still not match."
         )
 
-        violations = IUCNTermsChecker().check(("Test Section", text))
+        violations = IUCNTermsChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertEqual(
@@ -97,7 +97,7 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             "A final note mentioned extinct in the wild as ew."
         )
 
-        violations = IUCNTermsChecker().check(("Test Section", text))
+        violations = IUCNTermsChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn(
@@ -141,7 +141,7 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             "<i>threatened</i> taxa and <sup>V</sup><sub>u</sub> populations."
         )
 
-        violations = IUCNTermsChecker().check(("Test Section", text))
+        violations = IUCNTermsChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn(
@@ -176,7 +176,7 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             "notes should not trigger category abbreviation matches."
         )
 
-        violations = IUCNTermsChecker().check(("Test Section", text))
+        violations = IUCNTermsChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertNotIn(
@@ -254,7 +254,7 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             "Threatened species were also reviewed at sentence start."
         )
 
-        violations = IUCNTermsChecker().check(("Test Section", text))
+        violations = IUCNTermsChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertEqual(
@@ -279,7 +279,7 @@ class IUCNTermsCheckerTests(unittest.TestCase):
             "many Threatened species also remain."
         )
 
-        violations = IUCNTermsChecker().check(("Test Section", text))
+        violations = IUCNTermsChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertEqual(

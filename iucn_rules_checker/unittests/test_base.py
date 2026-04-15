@@ -196,9 +196,9 @@ class BaseCheckerTests(unittest.TestCase):
         self.assertEqual(violation.matched_snippet, "Alpha beta gamma")
         self.assertEqual(violation.section_name, "Section")
 
-    def test_check_dispatches_to_check_text(self) -> None:
+    def test_check_text_returns_violation_directly(self) -> None:
         """
-        Test that check dispatches to check text.
+        Test that check text returns violation directly.
 
         Args:
             None.
@@ -208,7 +208,7 @@ class BaseCheckerTests(unittest.TestCase):
         """
         checker = DummyChecker()
 
-        violations = checker.check(("Section [paragraph 1]", "Alpha beta gamma"))
+        violations = checker.check_text("Section [paragraph 1]", "Alpha beta gamma")
 
         self.assertEqual(len(violations), 1)
         self.assertEqual(violations[0].message, "Dispatched violation")

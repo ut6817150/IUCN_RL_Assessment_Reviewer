@@ -25,7 +25,7 @@ class PunctuationCheckerTests(unittest.TestCase):
         """
         text = "The assessment covered elevations from 10-20."
 
-        violations = PunctuationChecker().check(("Test Section", text))
+        violations = PunctuationChecker().check_text("Test Section", text)
         range_violations = [
             violation for violation in violations
             if "numeric ranges" in violation.message
@@ -55,7 +55,7 @@ class PunctuationCheckerTests(unittest.TestCase):
 
         for text, expected_fix in cases.items():
             with self.subTest(text=text):
-                violations = checker.check(("Test Section", text))
+                violations = checker.check_text("Test Section", text)
                 range_violations = [
                     violation for violation in violations
                     if "numeric ranges" in violation.message
@@ -83,7 +83,7 @@ class PunctuationCheckerTests(unittest.TestCase):
 
         for text in texts:
             with self.subTest(text=text):
-                violations = checker.check(("Test Section", text))
+                violations = checker.check_text("Test Section", text)
                 range_violations = [
                     violation for violation in violations
                     if "numeric ranges" in violation.message
@@ -102,7 +102,7 @@ class PunctuationCheckerTests(unittest.TestCase):
         """
         text = "The transect covered plots <b>10</b> - <i>20</i>."
 
-        violations = PunctuationChecker().check(("Test Section", text))
+        violations = PunctuationChecker().check_text("Test Section", text)
         range_violations = [
             violation for violation in violations
             if "numeric ranges" in violation.message
@@ -132,7 +132,7 @@ class PunctuationCheckerTests(unittest.TestCase):
 
         for text, expected_fix in cases.items():
             with self.subTest(text=text):
-                violations = checker.check(("Test Section", text))
+                violations = checker.check_text("Test Section", text)
                 range_violations = [
                     violation for violation in violations
                     if "numeric ranges" in violation.message
@@ -168,7 +168,7 @@ class PunctuationCheckerTests(unittest.TestCase):
 
         for text in texts:
             with self.subTest(text=text):
-                violations = checker.check(("Test Section", text))
+                violations = checker.check_text("Test Section", text)
                 range_violations = [
                     violation for violation in violations
                     if "numeric ranges" in violation.message
@@ -190,7 +190,7 @@ class PunctuationCheckerTests(unittest.TestCase):
             "None of these should be treated as numeric ranges."
         )
 
-        violations = PunctuationChecker().check(("Test Section", text))
+        violations = PunctuationChecker().check_text("Test Section", text)
         range_violations = [
             violation for violation in violations
             if "numeric ranges" in violation.message
@@ -214,7 +214,7 @@ class PunctuationCheckerTests(unittest.TestCase):
             "Peru <i>;</i> Ecuador."
         )
 
-        violations = PunctuationChecker().check(("Test Section", text))
+        violations = PunctuationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn(

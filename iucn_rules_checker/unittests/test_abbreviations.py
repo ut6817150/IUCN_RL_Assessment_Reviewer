@@ -33,7 +33,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
             "Parenthetical usage (e.g. in notes) and (i.e. in glosses) should also match."
         )
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
 
         eg_messages = [
             violation for violation in violations
@@ -63,7 +63,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
             "Fixed forms like <i>etc</i>, <b>in litt</b>, <i>Pers</i> <b>Comm</b>, and <sub>Prof</sub> should also match."
         )
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("Avoid 'e.g.' in body text; use 'for example' instead", messages)
@@ -94,7 +94,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
             "A heading might use PROF Smith without punctuation."
         )
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("Use 'etc.' with period", messages)
@@ -147,7 +147,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
             "A period outside italics such as <i>et al</i>. is also correct."
         )
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         combined_et_al = "Use italicized 'et al.'"
@@ -166,7 +166,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
         """
         text = "This citation uses <i>et al</i>. correctly."
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertNotIn("Use italicized 'et al.'", messages)
@@ -188,7 +188,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
             "A period outside italics also appears as <b><i>et al</i></b>."
         )
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn(
@@ -220,7 +220,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
             "A report may also mention de facto in plain text."
         )
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         combined_in_situ = "Latin term 'in situ' must be italicized and not contain periods"
@@ -250,7 +250,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
             "Later, Mrs. White and Ms. Black joined the survey."
         )
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("Use 'Dr' without period (UK style)", messages)
@@ -273,7 +273,7 @@ class AbbreviationCheckerTests(unittest.TestCase):
             "Later, <sup>Mrs.</sup> White and <sub>Ms.</sub> Black joined."
         )
 
-        violations = AbbreviationChecker().check(("Test Section", text))
+        violations = AbbreviationChecker().check_text("Test Section", text)
         messages = [violation.message for violation in violations]
 
         self.assertIn("Use 'Dr' without period (UK style)", messages)
@@ -293,14 +293,14 @@ class AbbreviationCheckerTests(unittest.TestCase):
         """
         checker = AbbreviationChecker()
 
-        paragraph_violations = checker.check((
+        paragraph_violations = checker.check_text(
             "Assessment > Notes [paragraph 2]",
             "Examples occur e.g. in text.",
-        ))
-        table_violations = checker.check((
+        )
+        table_violations = checker.check_text(
             "Assessment > Notes [table 1]",
             "Examples occur e.g. in text.",
-        ))
+        )
 
         self.assertTrue(paragraph_violations)
         self.assertTrue(table_violations)

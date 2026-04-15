@@ -25,14 +25,14 @@ class BibliographyCheckerTests(unittest.TestCase):
         """
         checker = BibliographyChecker()
 
-        bibliography_violations = checker.check((
+        bibliography_violations = checker.check_text(
             "Assessment > Bibliography [paragraph 1]",
             "Smith & Jones 2020. Example reference."
-        ))
-        body_violations = checker.check((
+        )
+        body_violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Smith & Jones 2020 discussed the species."
-        ))
+        )
 
         ampersand_messages = [
             violation.message for violation in bibliography_violations
@@ -58,10 +58,10 @@ class BibliographyCheckerTests(unittest.TestCase):
         """
         checker = BibliographyChecker()
 
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Bibliography [paragraph 1]",
             "<i>Smith</i> <b>&</b> <i>Jones</i> 2020 & Brown 2021."
-        ))
+        )
 
         ampersand_violations = [
             violation for violation in violations
@@ -84,10 +84,10 @@ class BibliographyCheckerTests(unittest.TestCase):
         """
         checker = BibliographyChecker()
 
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Bibliography [paragraph 1]",
             "Smith 2020 & Brown 2021."
-        ))
+        )
 
         ampersand_violations = [
             violation for violation in violations
@@ -108,10 +108,10 @@ class BibliographyCheckerTests(unittest.TestCase):
         """
         checker = BibliographyChecker()
 
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Bibliography [paragraph 1]",
             "Mishra et al. 2015. Example reference."
-        ))
+        )
 
         self.assertEqual(len(violations), 1)
         self.assertEqual(violations[0].rule_class, "AbbreviationChecker")
@@ -130,10 +130,10 @@ class BibliographyCheckerTests(unittest.TestCase):
         """
         checker = BibliographyChecker()
 
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Bibliography [paragraph 1]",
             "Smith 2020. Journal 10-20."
-        ))
+        )
 
         self.assertEqual(len(violations), 1)
         self.assertEqual(violations[0].rule_class, "PunctuationChecker")
@@ -152,10 +152,10 @@ class BibliographyCheckerTests(unittest.TestCase):
         """
         checker = BibliographyChecker()
 
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Bibliography [paragraph 1]",
             "Smith 2020. Flora 5000 species."
-        ))
+        )
 
         self.assertEqual(violations, [])
 

@@ -24,10 +24,10 @@ class SpellingCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SpellingChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "The programme was organised and then realised."
-        ))
+        )
 
         ize_violations = [
             violation for violation in violations
@@ -51,10 +51,10 @@ class SpellingCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SpellingChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "The color of the flower changed."
-        ))
+        )
 
         spelling_messages = [
             violation.message for violation in violations
@@ -75,10 +75,10 @@ class SpellingCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SpellingChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "The <i>col</i><i>or</i> changed and the plant was <b>organised</b> carefully."
-        ))
+        )
 
         fixes = [violation.suggested_fix for violation in violations]
         messages = [violation.message for violation in violations]
@@ -99,11 +99,11 @@ class SpellingCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = SpellingChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "The <sup>col</sup><sub>or</sub> changed and the plant was "
             "<sup>org</sup><sub>anised</sub> carefully."
-        ))
+        )
 
         fixes = [violation.suggested_fix for violation in violations]
         messages = [violation.message for violation in violations]

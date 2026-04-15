@@ -24,10 +24,10 @@ class ScientificNameCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = ScientificNameChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Observed <i>s</i><i>p</i> and <b>spp</b> in cultivation."
-        ))
+        )
 
         abbreviation_messages = [
             violation.message for violation in violations
@@ -50,10 +50,10 @@ class ScientificNameCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = ScientificNameChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Observed <i>sp.</i> and <b>spp.</b> in cultivation."
-        ))
+        )
 
         abbreviation_messages = [
             violation.message for violation in violations
@@ -73,11 +73,11 @@ class ScientificNameCheckerTests(unittest.TestCase):
             None. The assertions inside the test body enforce the expected behavior.
         """
         checker = ScientificNameChecker()
-        violations = checker.check((
+        violations = checker.check_text(
             "Assessment > Rationale [paragraph 1]",
             "Observed <sup>s</sup><sub>p</sub> and <sup>spp</sup> in cultivation, "
             "but not <sub>sp.</sub>."
-        ))
+        )
 
         abbreviation_messages = [
             violation.message for violation in violations

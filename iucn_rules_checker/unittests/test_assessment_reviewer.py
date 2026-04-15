@@ -42,14 +42,15 @@ class AssessmentReviewerTests(unittest.TestCase):
                 "SymbolChecker",
             ],
         )
+        self.assertEqual(type(reviewer.table_checker).__name__, "TableChecker")
         self.assertEqual(type(reviewer.bibliography_checker).__name__, "BibliographyChecker")
         self.assertNotIn("LanguageChecker", configured_checkers)
         self.assertFalse(hasattr(reviewer, "assessment_parser"))
         self.assertFalse(hasattr(reviewer, "review_assessment"))
 
-    def test_reviewer_skips_table_sections_but_checks_paragraph_sections(self) -> None:
+    def test_reviewer_routes_table_sections_to_table_checker_only(self) -> None:
         """
-        Test that reviewer skips table sections but checks paragraph sections.
+        Test that reviewer routes table sections to table checker only.
 
         Args:
             None.
@@ -60,7 +61,7 @@ class AssessmentReviewerTests(unittest.TestCase):
         reviewer = IUCNAssessmentReviewer()
         full_report = {
             "Assessment > Notes [paragraph 1]": "Examples occur e.g. in text.",
-            "Assessment > Notes [table 1] [row 1]": "Examples occur e.g. in text.",
+            "Assessment > Notes [table 1] [row 1]": "Examples include Smith et al. 2020.",
         }
 
         violations = reviewer.review_full_report(full_report)
@@ -69,7 +70,15 @@ class AssessmentReviewerTests(unittest.TestCase):
 
         self.assertIn("Avoid 'e.g.' in body text; use 'for example' instead", messages)
         self.assertIn("Assessment > Notes", sections)
-        self.assertNotIn("Assessment > Notes [table 1] [row 1]", sections)
+        self.assertIn("Use italicized 'et al.'", messages)
+        self.assertIn("Assessment > Notes [table 1] [row 1]", sections)
+        self.assertEqual(
+            [
+                violation.rule_method for violation in violations
+                if violation.section_name == "Assessment > Notes [table 1] [row 1]"
+            ],
+            ["AbbreviationChecker.check_et_al"],
+        )
 
     def test_reviewer_runs_only_bibliography_checker_in_bibliography_sections(self) -> None:
         """
