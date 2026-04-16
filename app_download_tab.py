@@ -1,17 +1,19 @@
-"""Helpers shared by the Streamlit app.
+"""Download-tab UI helpers for the Streamlit app.
 
 Purpose:
-    This module contains small workbook-building helpers used by ``app.py`` so
-    the tab rendering logic can stay focused on UI flow rather than Excel
-    export details.
+    This module renders the Excel export tab and builds the downloadable
+    workbook from whichever feedback outputs are currently available in
+    Streamlit session state.
 """
 
 from __future__ import annotations
 
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import streamlit as st
 
 
 def build_downloadable_feedback_excel(
@@ -56,6 +58,7 @@ def build_downloadable_feedback_excel(
         "Suggestion",
     ]
 
+    # Flatten the grouped rules output into one worksheet row per violation.
     rules_rows: list[dict[str, str]] = []
     grouped_violations = (rules_feedback or {}).get("grouped_violations") or {}
     for section_name, rows in grouped_violations.items():
@@ -70,6 +73,7 @@ def build_downloadable_feedback_excel(
                 }
             )
 
+    # Flatten the nested LLM rule/findings structure into one row per finding.
     llm_rows: list[dict[str, str]] = []
     if llm_feedback is not None:
         for llm_result in llm_feedback.get("llm_results", []):
@@ -86,6 +90,8 @@ def build_downloadable_feedback_excel(
                     }
                 )
 
+    # Only write the sheets for outputs that currently exist so the workbook
+    # matches the feedback the user has actually generated.
     excel_buffer = BytesIO()
     with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
         if rules_feedback is not None:
@@ -104,3 +110,61 @@ def build_downloadable_feedback_excel(
 
     excel_buffer.seek(0)
     return excel_buffer.getvalue()
+
+
+def render_download_tab(*, uploaded_name: str) -> None:
+    """
+    Render the downloadable-feedback tab.
+
+    Args:
+        uploaded_name (str): Original uploaded filename used for the workbook
+            download name.
+
+    Returns:
+        None: Value produced by this method.
+    """
+
+    st.subheader("Download feedback")
+    st.write(
+        "Generate a downloadable Excel file containing whichever feedback is ready "
+        "(rules-based, LLM, or both)."
+    )
+
+    has_rules_output = st.session_state.get("rules_feedback") is not None
+    has_llm_output = st.session_state.get("llm_feedback") is not None
+    has_any_output = has_rules_output or has_llm_output
+
+    status_col_1, status_col_2 = st.columns(2)
+    with status_col_1:
+        if has_rules_output:
+            st.success("Rules-based feedback ready")
+        else:
+            st.warning("Rules-based feedback not ready")
+    with status_col_2:
+        if has_llm_output:
+            st.success("LLM feedback ready")
+        else:
+            st.warning("LLM feedback not ready")
+    st.caption(
+        "At least one of these feedbacks must be ready for the download to be available."
+    )
+
+    if not has_any_output:
+        st.download_button(
+            label="Download feedback",
+            data=b"",
+            file_name=f"{Path(uploaded_name).stem or 'feedback'}_feedback.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            disabled=True,
+        )
+    else:
+        excel_bytes = build_downloadable_feedback_excel(
+            rules_feedback=st.session_state.get("rules_feedback") if has_rules_output else None,
+            llm_feedback=st.session_state.get("llm_feedback") if has_llm_output else None,
+        )
+        st.download_button(
+            label="Download feedback",
+            data=excel_bytes,
+            file_name=f"{Path(uploaded_name).stem or 'feedback'}_feedback.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
