@@ -21,40 +21,40 @@ from ui.app_llm_tab import render_llm_tab
 from ui.app_rag_tab import render_rag_tab
 from ui.app_rules_tab import render_rules_tab
 
-# Read the shared OpenRouter credential once so the tab helpers can reuse it.
-OPENROUTER_API_KEY = os.getenv("OR_TOKEN")
-
-# Keep the prototype RAG model configuration centralised at the app entry point.
-RAG_LLM_CONFIG = {
-    "base_url": "https://openrouter.ai/api/v1",
-    "model": "openai/gpt-oss-120b:free",
-    "api_key": OPENROUTER_API_KEY,
-    "reasoning_enabled": True,
+# Keep the selectable OpenRouter credentials centralised at the app entry point.
+OPENROUTER_KEY_OPTIONS = {
+    "Steve Bachman's Key": "Openrouter_API_key_Steve_Bachman",
+    "Jack Plummer's Key": "JackAPIKey",
+    "Khalid Alahmadi's Key": "OR_TOKEN",
 }
 
-# Expose the preset models for the LLM feedback tab in one place.
-LLM_TAB_CONFIGS = {
+# Expose the preset model metadata once, then inject the selected key at runtime.
+LLM_TAB_MODEL_SPECS = {
     "GPT OSS 120b (free and zero data retention)": {
         "base_url": "https://openrouter.ai/api/v1/chat/completions",
         "model": "openai/gpt-oss-120b:free",
-        "api_key": OPENROUTER_API_KEY,
         "reasoning_enabled": True,
     },
     "Qwen 3.5 Plus 02-15 (Paid and retains data)": {
         "base_url": "https://openrouter.ai/api/v1/chat/completions",
         "model": "qwen/qwen3.5-plus-02-15",
-        "api_key": OPENROUTER_API_KEY,
         "reasoning_enabled": True,
     },
 }
 CUSTOM_LLM_OPTION = "configure your own LLM"
 
 # Configure the shared page shell before any widgets are created.
-st.set_page_config(page_title="IUCN Assessment Feedback Tool", layout="wide")
+st.set_page_config(
+    page_title="IUCN Assessment Feedback Tool",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 st.title("IUCN Assessment Feedback Tool")
+
 st.caption(
-    "Upload one assessment, then run the rules-based, LLM, and RAG systems separately "
-    "from the tabs below."
+    "Use the arrow on the top left of the screen to access the sidebar for "
+    "document upload and API key selection. Upload one assessment, then run "
+    "the rules-based, LLM, and RAG systems separately from the tabs below."
 )
 
 # Track upload-scoped outputs and the shared parsed assessment in session state.
@@ -72,11 +72,48 @@ if "assessment_input_signature" not in st.session_state:
 # The RAG runtime manages its own larger chat/session state payload.
 init_rag_session_state(st.session_state)
 
-# Accept the document formats currently supported by the app workflows.
-uploaded = st.file_uploader(
-    "Upload a .docx, .html or .htm file",
-    type=["docx", "html", "doc"],
-)
+# Place the global app inputs back in the sidebar so the main page stays
+# focused on the workflow tabs.
+with st.sidebar:
+    st.subheader("Inputs")
+    st.caption(
+        "Choose a document and OpenRouter key here, then run each workflow "
+        "from the tabs in the main workspace."
+    )
+    uploaded = st.file_uploader(
+        "Assessment file",
+        type=["docx", "html", "doc"],
+    )
+    # Keep upload validation and readiness messaging anchored directly under
+    # the uploader instead of letting it fall below the API-key selector.
+    upload_feedback_placeholder = st.empty()
+    selected_key_label = st.selectbox(
+        "OpenRouter API key",
+        options=list(OPENROUTER_KEY_OPTIONS.keys()),
+        index=2,
+        key="openrouter_api_key_choice",
+    )
+
+selected_key_env_var = OPENROUTER_KEY_OPTIONS[selected_key_label]
+selected_openrouter_api_key = os.getenv(selected_key_env_var)
+
+if selected_openrouter_api_key:
+    st.sidebar.success(f"Using `{selected_key_label}`")
+
+# Keep the runtime model configs derived from the currently selected key.
+RAG_LLM_CONFIG = {
+    "base_url": "https://openrouter.ai/api/v1",
+    "model": "openai/gpt-oss-120b:free",
+    "api_key": selected_openrouter_api_key,
+    "reasoning_enabled": True,
+}
+LLM_TAB_CONFIGS = {
+    label: {
+        **config,
+        "api_key": selected_openrouter_api_key,
+    }
+    for label, config in LLM_TAB_MODEL_SPECS.items()
+}
 
 tmp_path: Path | None = None
 uploaded_ext: str | None = None
@@ -92,12 +129,14 @@ if uploaded:
 
     # Legacy `.doc` uploads must be converted before they can be parsed safely.
     if uploaded_ext == ".doc":
-        st.error(
+        upload_feedback_placeholder.error(
             "The feedback tool only supports .docx files. Please convert .doc to .docx and re-upload. Or, upload a HTML file."
         )
     # Reject any other unsupported extension early so the tabs stay disabled.
     elif uploaded_ext not in [".docx", ".html"]:
-        st.error("The feedback tool only supports .docx or HTML files.")
+        upload_feedback_placeholder.error(
+            "The feedback tool only supports .docx or HTML files."
+        )
 
     # Persist the supported upload to a temporary path because the parser
     # expects a filesystem location rather than an in-memory upload object.
@@ -106,8 +145,7 @@ if uploaded:
         safe_name = Path(uploaded.name).name
         tmp_path = tmp_dir / safe_name
         tmp_path.write_bytes(uploaded.getbuffer())
-
-        st.success(f"Uploaded: {uploaded.name}")
+        upload_feedback_placeholder.caption(f"Uploaded file: `{uploaded.name}`")
 
 # Clear all upload-scoped cached outputs when the user switches documents.
 if st.session_state["uploaded_file_signature"] != file_signature:
@@ -122,7 +160,9 @@ sync_rag_state_with_upload(st.session_state, file_signature)
 
 # Enable the downstream tabs only when a supported upload has been staged.
 if uploaded is None:
-    st.info("Upload a file to enable both feedback systems.")
+    upload_feedback_placeholder.caption(
+        "Upload a file to enable the rules-based, LLM, and RAG workflows."
+    )
 elif tmp_path is not None:
     input_ready = True
 
@@ -156,7 +196,7 @@ with llm_tab:
         uploaded_name=uploaded_name,
         llm_tab_configs=LLM_TAB_CONFIGS,
         custom_llm_option=CUSTOM_LLM_OPTION,
-        openrouter_api_key=OPENROUTER_API_KEY,
+        openrouter_api_key=selected_openrouter_api_key,
     )
 
 # Render the prototype RAG chat workflow over the same parsed assessment.

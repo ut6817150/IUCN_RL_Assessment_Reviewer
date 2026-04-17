@@ -15,6 +15,24 @@ and keeping the tab-specific UI logic out of `app.py`.
 
 The repository root is the parent folder of this `ui/` subfolder.
 
+## Future Work
+
+A natural next step for the Streamlit interface is user authentication plus
+per-user API-key management.
+
+At the moment, the app lets users choose from a small set of shared
+environment-variable-backed OpenRouter keys that are configured at the app
+level in `app.py`. A future version could instead let each signed-in user:
+
+- log in with their own account
+- save their own API key
+- reuse that key across sessions
+
+If this is implemented for a deployed app, the API keys should not be stored
+in Streamlit session state or local files. The safer design is to identify the
+user through an authentication provider and store each user's API key in an
+external persistent backend with encryption.
+
 ## Imports
 
 The modules in this folder are imported by `app.py` using paths such as:
