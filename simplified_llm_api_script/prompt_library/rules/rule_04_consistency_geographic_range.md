@@ -57,7 +57,7 @@ Brazil. EOO <5,000 km². AOO
 <500 km². 4 locations.
 
 ## Justification
-Consider the whoel table for Area of Occupancy (AOO), Extent of Occurrence (EOO) and Locations Information before providing feedback.
+Consider the whole table for Area of Occupancy (AOO), Extent of Occurrence (EOO) and Locations Information before providing feedback.
 
 Each table should include a column titled 'Justification' and carry the relevant justification to support the information in other columns.
 

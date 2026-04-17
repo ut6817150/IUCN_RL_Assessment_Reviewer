@@ -12,6 +12,7 @@ These acronyms do not need to be explained:
 - those in citations or references
 - those in section titles
 - "GeoCAT"
+- "IUCN"
 
 ## Acronyms Requirements [Red List Standard Consistency (Section 3.10)]
 Please remember that not all Red List users know what our acronyms and abbreviations for
