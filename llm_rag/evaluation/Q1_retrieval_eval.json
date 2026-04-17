@@ -1,0 +1,34 @@
+{
+  "judge_type": "hybrid_rag",
+  "question": "Based on Extent of occurence (EOO)/Area of occupancy (AOO) solely, how would you classify the species in the uploaded assessment document (Critically Endangered, Endangered or Vulnerable)?",
+  "retrieved_items": [
+    {
+      "block type": "text",
+      "source": "RedListGuidelines.pdf",
+      "page": 75,
+      "section": "8. Guidelines for Applying Criterion D",
+      "text": ". If any significant or plausible threats can be identified, then a full assessment will be necessary to determine the most appropriate classification (e.g., Critically Endangered under criteria B or C, or Vulnerable under criterion D2). If, despite searches, the taxon has not been recorded since the collection of the type specimen, and there are threats in the area, a listing of Critically Endangered (Possibly Extinct) or Extinct may be appropriate (see section 11 for guidance on how to make this determination). 8.2 Example of applying criterion D"
+    },
+    {
+      "block type": "text",
+      "source": "RedListGuidelines.pdf",
+      "page": 11,
+      "section": "Figure 2.1. Structure of the IUCN Red List Categories",
+      "text": ". A taxon is presumed Extinct in the Wild when exhaustive surveys in known and/or expected habitat, at appropriate times (diurnal, seasonal, annual), throughout its historic range have failed to record an individual. Surveys should be over a time frame appropriate to the taxon's life cycle and life form. CRITICALLY ENDANGERED (CR) A taxon is Critically Endangered when the best available evidence indicates that it meets any of the criteria A to E for Critically Endangered, and it is therefore considered to be facing an extremely high risk of extinction in the wild. ENDANGERED (EN) A taxon is Endangered when the best available evidence indicates that it meets any of the criteria A to E for Endangered, and it is therefore considered to be facing a very high risk of extinction in the wild"
+    },
+    {
+      "block type": "text",
+      "source": "RedListGuidelines.pdf",
+      "page": 15,
+      "section": "2.3 Nature of the criteria",
+      "text": ". Only the criteria for the highest category of threat that the taxon qualifies for should be listed. For example, if a taxon qualifies for criteria A, B, and C in the Vulnerable and Endangered category and only criterion A in the Critically Endangered category, then only the criterion A met in the Critically Endangered category should be listed (the highest category of threat). Assessors are encouraged to document criteria under which a species meets lower threat categories, because such information is critical to recovery planning. Although the criteria for each of the categories of threat are based on quantitative thresholds, the system remains relatively flexible to ensure that taxa for which there is very little information can also be assessed"
+    },
+    {
+      "block type": "text",
+      "source": "RL_categories_and_criteria.pdf",
+      "page": 37,
+      "section": "The IUCN Red List of Threatened Species™",
+      "text": "The IUCN Red List of Threatened Species ™ (or the IUCN Red List) is the world’s most comprehensive information source on the global conservation status of plant, animal and fungi species. It is based on an objective system for assessing the risk of extinction of a species should no conservation action be taken. Species are assigned to one of eight categories of threat based on whether they meet criteria linked to population trend, population size and structure and geographic range. Species listed as Critically Endangered, Endangered or Vulnerable are collectively described as ‘Threatened’. The IUCN Red List is not just a register of names and associated threat categories"
+    }
+  ]
+}
