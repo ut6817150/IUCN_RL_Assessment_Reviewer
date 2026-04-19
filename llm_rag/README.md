@@ -630,3 +630,8 @@ Future work could include:
 - better retrieval over comments, tables, field labels, and section aliases
 - comparison between current heuristic retrieval, embedded retrieval, and
   graph-expanded retrieval
+
+## Review
+ 
+- Reviewed by Dilip on 19.04.2026. 
+ 
