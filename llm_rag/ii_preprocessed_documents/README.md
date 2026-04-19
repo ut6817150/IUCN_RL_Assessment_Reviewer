@@ -2,141 +2,157 @@
 
 ## Purpose
 
-This folder holds the intermediate assets produced from the raw IUCN PDFs before the reference index is built.
+`llm_rag/ii_preprocessed_documents/` contains the structured intermediate
+outputs built from the raw reference PDFs in `llm_rag/i_raw_documents/`.
 
-The goal is retrieval quality, not perfect PDF reconstruction. The preprocessing step tries to preserve:
+This stage turns PDFs into retrieval-ready records. It is the bridge between
+raw documents and the vector-db build step. The outputs are intentionally stored
+as plain JSONL, JSON, and CSV files so they can be inspected, tested, and
+rebuilt without running the Streamlit app.
 
-- page provenance
-- section structure
-- narrative blocks
-- table parents
-- table rows
+## Main Script
 
-That structure is what makes later supporting-information retrieval much stronger than plain text chunking.
+`preprocess_pdfs.py` is the preprocessing entry point.
 
-## Input and output locations
-
-Input PDFs live in:
-
-```text
-llm_rag/i_raw_documents/
-```
-
-This folder receives the outputs:
-
-```text
-llm_rag/ii_preprocessed_documents/
-```
-
-Each source document gets its own subfolder with:
-
-- `raw_page_blocks.jsonl`
-- `retrieval_blocks.jsonl`
-- `manifest.json`
-- `tables/*.csv` when standard extraction succeeds
-
-The folder also contains a corpus-wide `summary.json`.
-
-## Main script
-
-`preprocess_pdfs.py` is the entry point for this stage.
-
-It now resolves paths relative to the `llm_rag` folder, so it reads from `i_raw_documents/` and writes back into this directory consistently.
-
-Run it from the repo root with:
+Run it from the repo root:
 
 ```bash
 python llm_rag/ii_preprocessed_documents/preprocess_pdfs.py
 ```
 
-## Test file
+The script reads every PDF in `llm_rag/i_raw_documents/` and writes one
+processed subfolder per PDF.
 
-`test_preprocess_pdfs_unit.py` is the unit-test file for this preprocessing stage.
+## What Preprocessing Does
 
-Its role is to validate the preprocessing pipeline from small helper functions up to the full orchestration flow in `process_pdf()` and `main()`. In practice, it checks:
+The preprocessing pipeline:
 
-- text cleaning and contextualization helpers
-- heading detection and section-path logic
-- layout block extraction from PDF pages
-- repeated header and footer removal
-- text-block merging into retrieval-ready records
-- table normalization and row-record creation
-- fallback reconstruction for the supporting-information tables
-- overlap removal between text and table content
-- JSONL writing and top-level pipeline output
+1. extracts layout-aware text blocks with page numbers, bounding boxes, font
+   size cues, and simple bold detection
+2. normalizes whitespace and PDF punctuation artifacts
+3. detects repeated running headers or footers
+4. identifies likely headings and maintains section paths
+5. merges narrative text into retrieval-sized text records
+6. extracts standard PDF tables with `pdfplumber`
+7. serializes extracted tables as parent table records and row-level records
+8. reconstructs difficult supporting-information tables with fallback logic
+9. removes obvious duplicated text when table-derived records already cover the
+   same content
+10. writes per-document manifests and a corpus-level `summary.json`
 
-The tests use mocked `fitz`, `pdfplumber`, file writes, and output directories so they can run as fast unit tests without requiring real PDF parsing during the test run.
+The output is designed for retrieval, not for recreating the original PDF
+layout exactly.
 
-Run the test file from the repo root with:
+## Output Files
+
+Each processed document folder usually contains:
+
+| File | Purpose |
+|---|---|
+| `raw_page_blocks.jsonl` | Raw layout-aware text blocks extracted from the PDF before retrieval-specific merging. |
+| `retrieval_blocks.jsonl` | Contextualized retrieval records consumed by the vector-db build step. |
+| `manifest.json` | Per-document counts and preprocessing metadata. |
+| `tables/*.csv` | CSV exports of extracted tables when standard table extraction succeeds. |
+
+The corpus-level file is:
+
+| File | Purpose |
+|---|---|
+| `summary.json` | List of all per-document manifest summaries. Useful for checking the whole preprocessing output at a glance. |
+
+## Retrieval Record Shape
+
+`retrieval_blocks.jsonl` records include provenance and retrieval fields such as:
+
+- `doc_id`
+- `source_file`
+- `page`
+- `block_type`
+- `section_path`
+- `section_title`
+- `table_id`
+- `table_title`
+- `row_id`
+- `text`
+- `metadata`
+
+The `text` field is contextualized. It includes source, page, block type, table
+or section context, and the actual content. This gives both sparse and dense
+retrieval more useful cues than raw extracted text alone.
+
+## Current Corpus Summary
+
+The current preprocessed corpus contains 1,170 retrieval records across seven
+source PDFs.
+
+| Document Folder | Raw Blocks | Retrieval Blocks | Text Blocks | Table Parents | Table Rows | Fallback Rows | Synthetic Parents |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `Guidelines_for_Reporting_Proportion_Threatened_ver_1_2/` | 38 | 14 | 14 | 0 | 0 | 0 | 0 |
+| `Mapping_Standards_Version_1.20_Jan2024/` | 380 | 200 | 118 | 10 | 72 | 0 | 0 |
+| `RedListGuidelines/` | 1,033 | 428 | 348 | 10 | 70 | 0 | 0 |
+| `Required_and_Recommended_Supporting_Information_for_IUCN_Red_List_Assessments/` | 186 | 68 | 27 | 3 | 38 | 38 | 3 |
+| `RL_categories_and_criteria/` | 402 | 120 | 97 | 6 | 17 | 0 | 0 |
+| `RL_criteria_summary_sheet/` | 65 | 37 | 8 | 5 | 24 | 0 | 0 |
+| `RL_Standards_Consistency/` | 1,259 | 303 | 253 | 6 | 44 | 0 | 0 |
+
+The supporting-information document is the only current source that uses
+synthetic fallback table recovery. Its visible tables are important for RAG
+answers, but they are not reliably captured as conventional PDF tables.
+
+## Relationship To The Vector DB
+
+The next stage is:
 
 ```bash
-python -m pytest -q llm_rag/ii_preprocessed_documents/test_preprocess_pdfs_unit.py
+python llm_rag/iii_vector_db/build_reference_db.py --reset
 ```
 
-## What the preprocessing script does
+That script reads `retrieval_blocks.jsonl` files from this folder and produces:
 
-### 1. Extract page blocks
+- `llm_rag/iii_vector_db/reference_corpus.jsonl`
+- `llm_rag/iii_vector_db/parent_contexts.jsonl`
+- `llm_rag/iii_vector_db/build_summary.json`
+- `llm_rag/iii_vector_db/chroma_db/reference_docs/`
 
-The script uses PyMuPDF to pull out block-level text and layout hints such as page number, bounding box, font size, and boldness.
+If preprocessing changes, rebuild the vector-db assets because chunk contents,
+metadata, and row-level records may all change.
 
-### 2. Remove repeated noise
+## Quality Checks
 
-Repeated headers, footers, and boilerplate are suppressed when they look like cross-page edge text rather than document content.
+After preprocessing, check:
 
-### 3. Recover section structure
+- `summary.json` for unexpected count changes
+- each `manifest.json` for missing table rows or sudden block-count drops
+- `tables/*.csv` files for malformed extraction
+- `llm_rag/evaluation/smoke_and_inspection/inspect_preprocessed_docs.ipynb`
+  for notebook-based inspection
 
-Heuristics are used to detect headings and build a best-effort section path that can be carried forward into retrieval metadata.
+The unit tests for this stage are in:
 
-### 4. Build text retrieval blocks
+```text
+llm_rag/unit_tests/ii_preprocessed_documents/
+```
 
-Narrative content is merged into retrieval-ready `text` blocks with source, page, block type, and section metadata.
+The latest full unit-test run passed:
 
-### 5. Extract tables
+```text
+127 passed in 9.60s
+```
 
-The script uses `pdfplumber` to extract standard tables when possible. For each extracted table it creates:
+## Files In This Folder
 
-- a parent `table` block
-- child `table_row` blocks
-- a CSV export in `tables/`
+- `preprocess_pdfs.py`
+  Preprocessing script for all raw reference PDFs.
+- `summary.json`
+  Corpus-level preprocessing summary.
+- one subfolder per source PDF
+  Per-document raw blocks, retrieval blocks, manifest, and optional tables.
+- `README.md`
+  This document.
 
-### 6. Recover difficult requirement tables
-
-The supporting-information PDF includes important visible tables that are often not encoded as real tables in the PDF structure.
-
-For that case the script creates synthetic fallback table records for Table 1, Table 2, and Table 3 by reading flattened page text and reconstructing:
-
-- parent `table` blocks
-- child `table_row` blocks
-
-### 7. Reduce overlap
-
-Because narrative extraction and table extraction can both capture similar text, the script reduces duplication by preferring:
-
-- `table_row` over `table`
-- `table` over `text`
-
-This keeps the downstream corpus cleaner.
-
-## Retrieval block types
-
-- `text`: narrative prose
-- `table`: parent table context
-- `table_row`: row-level table evidence
-
-The `table_row` records are especially important for questions about required supporting information.
-
-## What to inspect after running
-
-Useful files to spot-check are:
-
-1. per-document `manifest.json`
-2. per-document `retrieval_blocks.jsonl`
-3. the corpus-level `summary.json`
-
-For the supporting-information PDF, the main sanity check is that synthetic table parents and row-level entries were created successfully.
-
-## Limitations
-
-- heading detection is heuristic
-- some row text still contains PDF extraction artifacts
-- the fallback table logic is tailored to the current IUCN PDFs, not to arbitrary documents
+## Related Documentation
+- `llm_rag/README.md`
+- `llm_rag/i_raw_documents/README.md`
+- `llm_rag/iii_vector_db/README.md`
+- `llm_rag/evaluation/smoke_and_inspection/README.md`
+- `llm_rag/unit_tests/ii_preprocessed_documents/README.md`
