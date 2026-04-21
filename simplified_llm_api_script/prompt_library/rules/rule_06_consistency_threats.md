@@ -7,7 +7,7 @@ category: 'section_consistency'
 # Threats Consistency
 Ensure that the threats section follows the below specifications and is overall consistent in the information that is presented.
 
-## Section Content Requirements: Threats [Red List Standards Consistency (Section2.2.6)]
+## Section Content Requirements: Threats [Red List Standards Consistency (Section 2.2.6)]
 A summary of the main threats currently affecting or likely to affect the taxon is required
 supporting information for all taxa that are not assessed as Least Concern|( Table 2). In SIS, this is
 recorded in the Threats Information text field. Try to indicate whether these threats are historic,
