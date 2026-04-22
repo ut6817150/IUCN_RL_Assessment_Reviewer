@@ -164,10 +164,6 @@ def render_sidebar_controls(
 
     if selected_key_label == custom_openrouter_key_option:
         selected_openrouter_api_key = custom_openrouter_api_key or None
-        if not selected_openrouter_api_key:
-            api_key_feedback_placeholder.error(
-                "Enter your own API key to use the custom API-key option."
-            )
     else:
         # Preset key labels resolve to env vars so the app can keep a few
         # shared team-managed keys alongside the session-only custom option.
