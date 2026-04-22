@@ -4,7 +4,7 @@ severity: 'high'
 category: 'section_consistency'
 ---
 
-# Geographic Range / Occurrences Consistency
+# Distribution and Occurrences Consistency
 Ensure that the Geographic Range section follows the below specifications and is overall consistent in the information that is presented.
 
 ## Section Requirements: Geographic Range [Red List Standards Consistency (Sections 2.2.2)]

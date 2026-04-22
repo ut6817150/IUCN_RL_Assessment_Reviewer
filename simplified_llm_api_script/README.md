@@ -15,17 +15,18 @@ simplified_llm_api_script/
 ├── prompt_library/
 │   ├── system_prompt.md       # Base system prompt sent to the LLM on every call
 │   └── rules/
-│       ├── rule_01_consistency_threats.md
-│       ├── rule_02_consistency_habitats.md
-│       ├── rule_03_consistency_bibliography.md
-│       ├── rule_04_consistency_geographic_range.md
-│       ├── rule_05_consistency_population.md
-│       ├── rule_06_consistency_conservation.md
-│       ├── rule_07_justification_category.md
-│       ├── rule_08_formatting_references.md
-│       ├── rule_09_formatting_scientific_common_name.md
+│       ├── rule_01_justification_category.md
+│       ├── rule_02_consistency_geographic_range.md
+│       ├── rule_03_consistency_population.md
+│       ├── rule_04_consistency_habitats.md
+│       ├── rule_05_consistency_use_and_trade.md
+│       ├── rule_06_consistency_threats.md
+│       ├── rule_07_consistency_conservation.md
+│       ├── rule_08_consistency_bibliography.md
+│       ├── rule_09_formatting_references.md
 │       ├── rule_10_minor_check_acronyms.md
-│       └── rule_11_minor_check_argument_coherence.md
+│       ├── rule_11_minor_check_argument_coherence.md
+│       └── rule_12_formatting_scientific_common_name.md
 │
 ├── json_converted/            # Example assessment inputs (JSON trees)
 ├── converted/                 # Source DOCX/HTML files for assessment_processor
@@ -151,7 +152,7 @@ To convert a DOCX file: run `assessment_processor.py` (it reads from `converted/
 
 ```json
 {
-  "rule_01_consistency_threats": [
+  "rule_06_consistency_threats": [
     {
       "section_path": "Threats > Classification Scheme",
       "issue": "Threat X is listed here but absent from the Redlist Assessment narrative.",
@@ -159,7 +160,7 @@ To convert a DOCX file: run `assessment_processor.py` (it reads from `converted/
       "suggestion": "Add threat X to the Redlist Assessment or remove it from the threats table."
     }
   ],
-  "rule_02_consistency_habitats": []
+  "rule_04_consistency_habitats": []
 }
 ```
 
