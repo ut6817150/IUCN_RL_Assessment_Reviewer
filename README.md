@@ -87,21 +87,15 @@ and then `cd` into the repo root.
 Python 3.12 is recommended because the project has been developed and tested
 against that environment.
 
-```bash
-python -m venv .venv
-```
-
-Activate the environment.
-
-On Windows PowerShell:
-
 ```powershell
+# Windows PowerShell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-On macOS/Linux:
-
 ```bash
+# macOS/Linux
+python -m venv .venv
 source .venv/bin/activate
 ```
 
@@ -120,7 +114,7 @@ notebook support used by the evaluation notebooks.
 
 ### 4. Prepare An OpenRouter API Key
 
-When running locally, users should have an OpenRouter API key:
+When running locally, users must provide their own OpenRouter API key:
 
 ```text
 https://openrouter.ai/
@@ -129,22 +123,11 @@ https://openrouter.ai/
 The app assumes OpenRouter-backed model access for the LLM feedback and RAG
 chat workflows.
 
-You can either:
-
-- enter your own OpenRouter API key in the app sidebar when prompted
-- set one of the preset environment variables used by the sidebar configuration
-
-The current preset environment-variable names are defined in `ui/app_config.py`:
-
-```text
-Openrouter_API_key_Steve_Bachman
-JackAPIKey
-OR_TOKEN
-```
-
-For local development, the simplest option is usually to paste your own
-OpenRouter key into the sidebar using the custom API-key option. The
-rules-based feedback tab does not require an API key.
+The preconfigured API-key options are deployment-specific and will not work
+after cloning the repository locally unless you also configure matching local
+environment variables. For local development, use the sidebar option to enter
+your own OpenRouter API key. The rules-based feedback tab does not require an
+API key.
 
 ### 5. Start The App
 
@@ -459,8 +442,11 @@ Examples of what the notebooks evaluate:
   Runs targeted checker sections from a purpose-built Word document so rule
   behavior can be inspected checker by checker.
 - `iucn_rules_checker/test_word_document/test_word_document.ipynb`
-  Runs the rules-based reviewer on a realistic sample assessment and displays
-  the resulting violations for manual inspection.
+  Runs the rules-based reviewer on a user-provided Word assessment and displays
+  the resulting violations for manual inspection. During development, this
+  workflow was used to spot check real IUCN assessment documents provided by
+  Kew Gardens; those documents are not included in the repository for
+  confidentiality reasons.
 - `llm_rag/evaluation/smoke_and_inspection/`
   Contains notebooks for inspecting preprocessed reference assets, vector-db
   build outputs, deterministic threshold lookup, and broad retrieval behavior.
