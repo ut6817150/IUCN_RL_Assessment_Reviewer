@@ -1,6 +1,9 @@
 # IUCN LLM Assessment Checker
 
-Runs structured LLM-based quality checks against IUCN Red List species assessment documents. Each check is defined as a markdown rule file; the engine selects the relevant sections of the assessment, calls the configured LLM, and returns structured findings.
+Runs structured LLM-based quality checks against parsed IUCN Red List species
+assessment documents. Each check is defined as a markdown rule file; the engine
+selects the relevant sections of the assessment, calls the configured LLM, and
+returns structured findings.
 
 ---
 
@@ -10,7 +13,8 @@ Runs structured LLM-based quality checks against IUCN Red List species assessmen
 simplified_llm_api_script/
 ├── llm_checker_v2.py          # Main module: LLM providers, rule evaluation, entry points
 ├── assessment_processor.py    # Converts DOCX/HTML assessment documents → structured JSON
-├── grid_test.py               # Grid search runner: tests a matrix of providers × models
+├── grid_test.py               # Evaluation runner: tests a matrix of providers × models
+├── IUCN_LLM_checks.md         # Source notes for the rule set
 │
 ├── prompt_library/
 │   ├── system_prompt.md       # Base system prompt sent to the LLM on every call
@@ -29,22 +33,29 @@ simplified_llm_api_script/
 │       └── rule_12_formatting_scientific_common_name.md
 │
 ├── json_converted/            # Example assessment inputs (JSON trees)
-├── converted/                 # Source DOCX/HTML files for assessment_processor
-├── grid_outputs/              # Results from grid_test.py runs
-│
-├── requirements.txt
-└── .env                       # API keys (not committed)
+├── grid_outputs/              # Generated results from grid_test.py runs
+├── unit_tests/                # Unit tests for rule selection/orchestration helpers
+├── docs/                      # Integration notes for calling review_assessment
+└── evaluation/                # Evaluation spreadsheets and test files, when present
 ```
 
 ---
 
 ## Setup
 
+Install dependencies from the repository root:
+
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
-Create a `.env` file in this directory:
+The root `requirements.txt` covers the dependencies used by this folder.
+If you are already inside `simplified_llm_api_script/`, use
+`python3 -m pip install -r ../requirements.txt`.
+
+For command-line use, provide the API key for the provider you intend to call.
+You can place these in a `.env` file in the repository root or export them in
+your shell:
 
 ```
 OPENROUTER_KEY=your_openrouter_key
@@ -58,13 +69,15 @@ Only the key for the provider you intend to use is required.
 
 ## CLI Usage
 
+Run from `simplified_llm_api_script/`:
+
 ```bash
-python llm_checker_v2.py [json_file] --provider [anthropic|openrouter|huggingface] --model [model_name] --mode [sequential|concurrent]
+python3 llm_checker_v2.py json_converted/Test1_Bulbostylis\ atracuminata\ IUCN\ Draft2_JP.json --provider openrouter --mode sequential
 ```
 
 | Argument | Default | Description |
 |---|---|---|
-| `json_file` | bundled example | Path to an assessment JSON file |
+| `json_file` | legacy fallback path | Path to an assessment JSON file. Pass this explicitly. |
 | `--provider` | `openrouter` | LLM provider |
 | `--model` | provider default | Model name override |
 | `--mode` | `sequential` | `sequential`: one rule at a time (rate-limit safe); `concurrent`: all rules in parallel |
@@ -80,7 +93,7 @@ python llm_checker_v2.py [json_file] --provider [anthropic|openrouter|huggingfac
 **Example:**
 
 ```bash
-python llm_checker_v2.py json_converted/my_assessment.json --provider anthropic --mode sequential
+python3 llm_checker_v2.py json_converted/Test2_Calamus_heatubunii_JPComms.json --provider openrouter --model google/gemma-4-31b-it --mode sequential
 ```
 
 Output is a JSON array of rule results printed to stdout.
@@ -142,7 +155,19 @@ Assessments are represented as a hierarchical JSON tree. This is the format prod
 }
 ```
 
-To convert a DOCX file: run `assessment_processor.py` (it reads from `converted/`, writes to `json_converted/`).
+To convert DOCX/HTML files in batch mode, create a local `converted/` folder in
+this directory, put the source files there, and run:
+
+```bash
+python3 assessment_processor.py
+```
+
+Batch mode reads from `converted/` and writes parsed JSON files to
+`json_converted/`. To parse a single file and print JSON to stdout:
+
+```bash
+python3 assessment_processor.py path/to/assessment.docx
+```
 
 ---
 
@@ -170,10 +195,13 @@ Rules with no findings return an empty list. Rules that failed due to an LLM err
 
 ## Grid Testing
 
-`grid_test.py` runs all assessments in `json_converted/` against a configurable matrix of `(provider, model)` pairs. The matrix is defined in the `GRID` list at the top of the file.
+`grid_test.py` runs all assessments in `json_converted/` against a configurable
+matrix of `(provider, model)` pairs. The matrix is defined in the `GRID` list at
+the top of the file. This is an evaluation workflow; the main reviewer does not
+read `grid_outputs/`.
 
 ```bash
-python grid_test.py [--docs STEM ...] [--delay SECONDS]
+python3 grid_test.py [--docs STEM ...] [--delay SECONDS]
 ```
 
 | Argument | Default | Description |
@@ -188,3 +216,35 @@ Results are written to `grid_outputs/` as:
 - `{doc_stem}/{provider}__{model_slug}.json` — findings only
 - `{doc_stem}/{provider}__{model_slug}_meta.json` — full metadata (token usage, timing, errors)
 - `_grid_summary.json` — aggregate across all runs
+
+---
+
+## Programmatic Use
+
+The main handover function is `review_assessment(...)` in `llm_checker_v2.py`.
+It accepts a parsed assessment dictionary and returns a dictionary keyed by rule
+name:
+
+```python
+import asyncio
+import json
+
+from llm_checker_v2 import review_assessment
+
+with open("json_converted/Test2_Calamus_heatubunii_JPComms.json", encoding="utf-8") as f:
+    assessment = json.load(f)
+
+results = asyncio.run(review_assessment(assessment))
+```
+
+See `docs/review_assessment_integration.md` for provider configuration examples.
+
+---
+
+## Tests
+
+From the repository root:
+
+```bash
+python3 -m pytest simplified_llm_api_script/unit_tests
+```

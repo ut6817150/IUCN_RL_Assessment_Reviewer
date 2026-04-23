@@ -1,77 +1,77 @@
 # Test Preprocessing
 
-This folder contains notebooks and fixture files for testing the preprocessing parser in `../assessment_processor.py`.
+This folder contains notebooks and DOCX fixtures for testing `../assessment_processor.py`.
 
 ## Contents
 
-### `test_output_formate.ipynb`
+### `test_output_format.ipynb`
 
 Manual output inspection notebook.
 
-- Purpose: parse one `.docx`, `.html`, or `.htm` file using `parse_to_dict`
-- Input: set `DOCUMENT_PATH` inside the notebook
-- Output: prints the resulting parsed dictionary in standard formatted JSON
-- Use this when you want to quickly inspect what the parser produces for one document
+- Parses one `.docx`, `.html`, or `.htm` file using `parse_to_dict`
+- Prints the parsed dictionary as formatted JSON
+- Uses `word assessment files/Myrcia neosmithii_draft_status_Apr2022_v2.docx` by default
 
 ### `unit_tests.ipynb`
 
-Function-level and behavior-level test notebook.
+Unit-level and fixture-based parser tests.
 
-- Purpose: test key `AssessmentParser` helpers and parser behavior in small controlled examples
-- Output: each test prints `PASS` or `FAIL`
-- Fixture style: creates temporary DOCX and HTML examples inside the notebook
-- Coverage includes:
-  - rich-text wrapping
-  - paragraph rich-text extraction
-  - style bucket merging
-  - heading detection
-  - table extraction
-  - full DOCX parsing
-  - DOCX files without comments
-  - HTML parsing
-  - HTML style extraction
-  - `.htm` extension support
-  - `parse_to_dict`
-  - raw XML run rendering
-  - unsupported file extensions
+- Runs 17 tests that print `PASS` or `FAIL`
+- Uses generated DOCX and HTML fixtures for controlled parser behavior
+- Uses selected real DOCX fixtures for regression checks
+- Includes deterministic-output and structural-invariant checks
 
-### `evaluation_tests.ipynb`
+Coverage includes:
 
-Parser-output evaluation notebook.
+- rich-text wrapping and paragraph rich-text rendering
+- style bucket merging
+- heading detection
+- table extraction
+- full DOCX parsing
+- DOCX files without comments
+- HTML and `.htm` parsing
+- HTML style extraction
+- `parse_to_dict`
+- raw XML run rendering
+- unsupported file extensions
+- DOCX edge structures
+- output invariants
+- real DOCX fixture regressions
+- deterministic parser output
 
-- Purpose: evaluate the final parsed JSON dictionary using output-level metrics
-- Output: each metric prints `PASS` or `FAIL` plus its score
-- Fixture in this folder: `Myrcia neosmithii_draft_status_Apr2022_v2.docx`
-- Note: evaluation testing has been run across 110 documents in total.
+### `evaluation_tests_batch.ipynb`
 
-The evaluation metrics include:
+Batch parser evaluation notebook.
 
-- text bigram similarity between the source DOCX text and parsed JSON text
+- Evaluates all DOCX files in `word assessment files/`
+- Reports metric-level scores and aggregate scores
+- Includes both parser-output checks and raw DOCX/XML-derived checks
+
+Metrics include:
+
+- text bigram similarity
 - schema completeness
 - heading tree recall
-- top-level heading order accuracy
-- block type distribution accuracy
-- plain-text exact-match recall
-- rich-text formatting recall
 - rich-text tag coverage
-- table cell exact-match accuracy
-- style feature recall
-- comment output match
-- overall parser evaluation score
+- style block presence
+- comment output structure
+- raw DOCX/XML text bigram similarity
+- raw DOCX/XML heading tree recall
+- raw DOCX/XML structure count consistency
+- raw DOCX/XML comment ID coverage
+- raw DOCX/XML rich-text feature recall
 
-### `Myrcia neosmithii_draft_status_Apr2022_v2.docx`
+### `word assessment files/`
 
-Sample DOCX fixture used by the notebooks.
+DOCX fixture folder used by the notebooks.
+
+- Contains the batch assessment files used by `evaluation_tests_batch.ipynb`
+- Contains selected real DOCX fixtures used by `unit_tests.ipynb`
+- Contains the default inspection document used by `test_output_format.ipynb`
 
 ## Testing Setup
 
-Run the notebooks from this folder so relative paths resolve correctly:
-
-```bash
-cd preprocessing/test_preprocessing
-```
-
-The notebooks import `assessment_processor.py` by walking up the parent directories until the parser file is found. This means they should still work when opened from Jupyter, as long as the repository structure remains the same.
+The notebooks locate `assessment_processor.py` by searching the current directory and parent directories. They can be run from the repository root or from this folder.
 
 Required Python packages:
 
@@ -84,8 +84,8 @@ Required Python packages:
 
 ### Manual Output Inspection
 
-1. Open `test_output_formate.ipynb`
-2. Set `DOCUMENT_PATH` to the document you want to parse
+1. Open `test_output_format.ipynb`
+2. Set `DOCUMENT_PATH` if a different input document is required
 3. Run all cells
 4. Inspect the printed JSON dictionary
 
@@ -95,16 +95,15 @@ Required Python packages:
 2. Run all cells
 3. Confirm every test prints `PASS`
 
-### Evaluation Tests
+### Batch Evaluation
 
-1. Open `evaluation_tests.ipynb`
-2. Confirm the sample document path 
-3. Run all cells
-4. Review each metric score and the overall parser evaluation score
+1. Open `evaluation_tests_batch.ipynb`
+2. Run all cells
+3. Review each metric score and the aggregate scores
 
 ## Interpreting Results
 
-- `PASS` means the test or metric matched the expected parser output for the current fixture.
-- `FAIL` means the parser output changed or the expected value in the notebook needs to be reviewed.
-- The evaluation metrics are intended as regression checks for the final JSON dictionary, not as replacements for manual review of difficult documents.
-- The bigram metric is useful for detecting text-loss regressions because it compares the text content in the source Word document with the text content preserved in the parsed JSON.
+- `PASS` means the test or metric matched its expected condition.
+- `FAIL` means the parser output or metric result needs review.
+- Unit tests focus on controlled behavior, invariants, and selected real-document regressions.
+- Batch evaluation provides broader parser-output and raw DOCX/XML consistency checks across the assessment fixture set.

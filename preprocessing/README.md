@@ -87,7 +87,7 @@ python3.12 assessment_processor.py "<path-to-file>.docx" > "output.json"
 
 The folder `test_preprocessing/` contains notebooks for manual testing, unit testing, and evaluation testing.
 
-### `test_output_formate.ipynb`
+### `test_output_format.ipynb`
 
 Use this notebook to quickly inspect parser output for a single document.
 
@@ -97,20 +97,23 @@ Use this notebook to quickly inspect parser output for a single document.
 
 ### `unit_tests.ipynb`
 
-Use this notebook to test individual parser functions and expected parser behavior.
+Use this notebook to test parser helpers, public parser behavior, output invariants, and selected real-document regressions.
 
-- purpose: run focused tests for rich-text rendering, table extraction, heading detection, DOCX parsing, HTML parsing, and error handling
+- purpose: run focused tests for rich-text rendering, table extraction, heading detection, DOCX parsing, HTML parsing, error handling, output invariants, and deterministic output
 - output: each test section prints `PASS` or `FAIL`
-- note: the tests use small temporary DOCX and HTML fixtures created inside the notebook
+- fixture style: uses generated DOCX/HTML fixtures and selected real DOCX files from `word assessment files/`
 
-### `evaluation_tests.ipynb`
+### `evaluation_tests_batch.ipynb`
 
-Use this notebook to evaluate the final parsed JSON dictionary using parser-output metrics.
+Use this notebook to evaluate parser output across the DOCX fixture batch.
 
-- purpose: parse the sample document and score the output dictionary using evaluation metrics
-- sample file: `Myrcia neosmithii_draft_status_Apr2022_v2.docx`
-- metrics include schema completeness, heading tree recall, block type distribution accuracy, plain text exact-match recall, rich-text formatting recall, table cell exact-match accuracy, style feature recall, comment output match, and overall parser evaluation score
+- purpose: parse all DOCX files in `test_preprocessing/word assessment files/` and report batch-level metric scores
+- metrics include text bigram similarity, schema completeness, heading tree recall, rich-text tag coverage, style block presence, comment output structure, and raw DOCX/XML consistency checks
 - output: each metric prints `PASS` or `FAIL` plus the metric score
+
+### `word assessment files/`
+
+DOCX fixture folder used by the test and evaluation notebooks.
 
 ## Recommended Process
 
@@ -127,7 +130,7 @@ Use this notebook to evaluate the final parsed JSON dictionary using parser-outp
 
 ### If you want to test interactively
 
-1. Open `test_preprocessing/test_output_formate.ipynb`
+1. Open `test_preprocessing/test_output_format.ipynb`
 2. Set `DOCUMENT_PATH`
 3. Run the notebook cells
 
@@ -137,9 +140,8 @@ Use this notebook to evaluate the final parsed JSON dictionary using parser-outp
 2. Run all cells
 3. Check that every test prints `PASS`
 
-### If you want to run parser-output evaluation metrics
+### If you want to run batch evaluation metrics
 
-1. Open `test_preprocessing/evaluation_tests.ipynb`
+1. Open `test_preprocessing/evaluation_tests_batch.ipynb`
 2. Run all cells
-3. Review each printed score and the overall parser evaluation score
-
+3. Review each printed score and the aggregate parser evaluation scores
