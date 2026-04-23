@@ -1,6 +1,12 @@
 # IUCN Rules Checker
 
-Utilities for parsing an assessment tree into a flat report and running the
+The rules checker is the deterministic review component of this project. It is
+meant to take a parsed IUCN assessment, run a fixed set of rule-based checks
+over the content, and return structured violations for issues such as
+formatting, terminology, references, spelling, dates, numbers, and related
+review concerns.
+
+It does this by parsing an assessment tree into a flat report and running the
 package's rules-based review flow on the parsed content.
 
 This package also powers the repo-level Streamlit interface in `app.py`.
@@ -9,54 +15,76 @@ For rule-by-rule checker behavior, see:
 
 - `checkers/README.md`
 
-## Files In This Folder
+## Files And Project Structure
 
-Primary files and subfolders in `iucn_rules_checker/`:
+```text
+iucn_rules_checker/
+|- assessment_parser.py
+|- assessment_reviewer.py
+|- violation.py
+|- checkers/
+|- unittests/
+|- evaluation/
+|- test_word_document/
+`- README.md
+```
 
-- `assessment_parser.py`
-  Converts a structured assessment dictionary into a flat
-  `section_name -> text` mapping.
-- `assessment_reviewer.py`
-  Runs the configured checker classes over an already parsed report and
-  returns a list of violations.
-- `violation.py`
-  Defines the `Violation` dataclass used as the shared output format.
-- `checkers/`
-  Contains the rule-specific checker implementations.
-- `evaluation/`
-  Contains the notebook and assets used for rules-based evaluation and
-  refinement.
-- `test_word_document/`
-  Contains the sample Word-document notebook workflow.
+Quick guide to the contents of this folder:
+
+| Path | Purpose |
+| --- | --- |
+| `assessment_parser.py` | Flattens a structured assessment dictionary into the `section_name -> text` mapping used by the reviewer. |
+| `assessment_reviewer.py` | Runs the rules-based review flow over a parsed report and returns `Violation` objects. |
+| `violation.py` | Defines the shared `Violation` dataclass used across the package. |
+| `checkers/` | Checker implementations plus shared checker utilities. See `checkers/README.md` for rule-level documentation. |
+| `unittests/` | Standard-library regression tests for the parser, reviewer, and checker modules. |
+| `evaluation/` | Notebook and supporting assets used to inspect and refine rules-based behaviour. |
+| `test_word_document/` | Notebook workflow for running the reviewer on a user-supplied `.docx` assessment. |
+| `README.md` | Package-level overview and usage notes. |
+
+## Testing And Evaluation
+
+Testing material for the rules checker is grouped into three folders:
+
 - `unittests/`
-  Contains the regression test suite.
-- `README.md`
-  This document.
+  Standard-library `unittest` suite for parser, reviewer, and checker
+  regressions.
+- `evaluation/`
+  Contains `evaluation.ipynb`, `test_doc_rules_based.docx`, and
+  `IUCN_submissions_evaluation.xlsx` for notebook-based inspection and
+  evaluation of rule behaviour.
+- `test_word_document/`
+  Contains `test_word_document.ipynb`, a notebook for running the reviewer on
+  your own `.docx` assessment file. The original Kew sample document is not
+  included in this repository for confidentiality reasons.
 
-The package currently has three main code responsibilities:
+Run the full unit-test suite from the repository root:
 
-- `assessment_parser.py`
-  Converts a structured assessment dictionary into a flat
-  `section_name -> text` mapping.
-- `assessment_reviewer.py`
-  Runs the configured checker classes over an already parsed report and
-  returns a list of violations.
-- `violation.py`
-  Defines the `Violation` dataclass used as the shared output format.
+```bash
+python -m unittest discover -s iucn_rules_checker/unittests -p "test_*.py"
+```
 
-The checker implementations live in `checkers/`, and the regression tests live
-in `unittests/`.
+Run selected test modules:
+
+```bash
+python -m unittest iucn_rules_checker.unittests.test_assessment_parser
+python -m unittest iucn_rules_checker.unittests.test_assessment_reviewer
+```
+
+The notebook workflows in `evaluation/` and `test_word_document/` first
+convert a Word document to a Python dictionary using
+`preprocessing/assessment_processor.py`, then run the parser and reviewer on
+that structured data.
+
+To test your own `.docx` assessment, open
+`test_word_document/test_word_document.ipynb`, set `CUSTOM_DOCX_PATH` to your
+file path, and run the notebook cells.
 
 ## Requirements
 
 ### Runtime Dependencies
 
-The core Python code in `iucn_rules_checker/` uses only the Python standard
-library.
-
-External runtime dependencies for the package itself:
-
-- none
+The core Python code in `iucn_rules_checker/` uses only the Python standard library.
 
 ### Optional Tooling
 
@@ -69,6 +97,18 @@ External runtime dependencies for the package itself:
   using the `parse_to_dict` function from `repo root > preprocessing > assessment_processor.py`
 - `beautifulsoup4`
   Also needed for that Word-document conversion step
+
+## Core Workflow And Classes
+
+The core rules-checker flow has two main stages:
+
+1. `AssessmentParser` converts a structured assessment dictionary into a flat
+   report.
+2. `IUCNAssessmentReviewer` runs the configured checkers over that flat report
+   and returns `Violation` objects.
+
+The sections below describe the main classes and helper abstractions involved
+in that workflow.
 
 ## AssessmentParser
 
@@ -212,7 +252,7 @@ It removes these tags only:
 - superscript tags: `<sup>`
 - subscript tags: `<sub>`
 
-## Violation Output
+## Violation Objects
 
 Each rule hit is returned as a `Violation` object.
 
@@ -250,7 +290,7 @@ Example `to_dict()` output:
 }
 ```
 
-## BaseChecker Helpers
+## Checker Framework
 
 All checker classes inherit from `checkers/base.py`.
 
@@ -279,7 +319,7 @@ It returns:
 That lets a checker match against normalized text but still create violations
 against the original rich-text source.
 
-## Checkers
+## Checker Modules
 
 Checker modules currently present in `checkers/`:
 
@@ -297,175 +337,6 @@ Checker modules currently present in `checkers/`:
 - `symbols.py`
 
 See `checkers/README.md` for the method-by-method rule documentation.
-
-## Unit Tests
-
-The unit test suite uses the standard library `unittest` runner.
-
-The unit tests are intended to be run from the repository root:
-
-- `IUCN_Reviewer/`
-
-That is the folder that contains `app.py` and the `iucn_rules_checker/`
-package directory.
-
-Tests are designed to be run from that repository root, because they import
-modules using package paths such as
-`iucn_rules_checker.assessment_reviewer`.
-
-Run the full suite:
-
-```bash
-python -m unittest discover -s iucn_rules_checker/unittests -p "test_*.py"
-```
-
-Run one test module:
-
-```bash
-python -m unittest iucn_rules_checker.unittests.test_assessment_parser
-python -m unittest iucn_rules_checker.unittests.test_assessment_reviewer
-```
-
-See also:
-
-- `unittests/README.md`
-
-## Evaluation Folder
-
-`evaluation/` records how the rules-based system was evaluated and refined.
-
-It currently contains:
-
-- `evaluation.ipynb`
-  Notebook used to run the custom evaluation document through the review flow.
-- `test_doc_rules_based.docx`
-  Custom Word document used to refine rule behavior.
-- `IUCN_submissions_evaluation.xlsx`
-  Excel workbook containing the results of the initial sweep across 109 Kew
-  assessments.
-
-In this evaluation flow, the Word document is first converted to a Python dict
-using the `parse_to_dict` function from `repo root > preprocessing > assessment_processor.py`.
-
-See:
-
-- `evaluation/README.md`
-
-for the fuller evaluation notes.
-
-## Test Word Document
-
-The notebook workflow used for Word-document testing and inspection lives in
-`test_word_document/`.
-
-Current contents:
-
-- `test_word_document/test_word_document.ipynb`
-- `test_word_document/README.md`
-
-The original `test_word_document/Acrocarpus_fraxinifolius_JP.docx` sample file
-is not included in this repository for confidentiality reasons. To use the
-notebook, provide your own `.docx` assessment file.
-
-During development, this notebook workflow was used to spot check real IUCN
-assessment documents provided by Kew Gardens. Those documents are not included
-in the repository because they are confidential.
-
-The notebook is used for:
-
-- loading a `.docx` file
-- converting it to a Python dict
-- parsing the resulting assessment dictionary
-- running the rules-based reviewer
-- printing the generated violations
-
-### Test Your Own Word Document
-
-You can run the rules-based system on your own Word document in two common
-ways.
-
-#### From The Notebook
-
-Open:
-
-- `test_word_document/test_word_document.ipynb`
-
-and edit the path cell:
-
-- set `CUSTOM_DOCX_PATH` to your own file path to test a `.docx`
-
-If `CUSTOM_DOCX_PATH` is left as `None`, the notebook will stop with a reminder
-to provide a local file path.
-
-Example:
-
-```python
-CUSTOM_DOCX_PATH = "path/to/your_assessment.docx"
-```
-
-The notebook will then:
-
-1. load that Word document
-2. convert it to a Python dict using the `parse_to_dict` function from `repo root > preprocessing > assessment_processor.py`
-3. parse the resulting assessment dictionary with `AssessmentParser`
-4. generate violations with `IUCNAssessmentReviewer`
-
-#### From A Python Script
-
-If you want to run the same workflow from a script, first convert the Word
-document to a Python dict using the `parse_to_dict` function from
-`repo root > preprocessing > assessment_processor.py`, then pass the result
-into the core package.
-
-```python
-from importlib.util import module_from_spec, spec_from_file_location
-from pathlib import Path
-
-from iucn_rules_checker.assessment_parser import AssessmentParser
-from iucn_rules_checker.assessment_reviewer import IUCNAssessmentReviewer
-
-repo_root = Path(r"G:\\path\\to\\IUCN_Reviewer")
-processor_path = repo_root / "preprocessing" / "assessment_processor.py"
-docx_path = Path(r"G:\\path\\to\\your_assessment.docx")
-
-spec = spec_from_file_location("assessment_processor_runtime", processor_path)
-module = module_from_spec(spec)
-assert spec.loader is not None
-spec.loader.exec_module(module)
-
-assessment = module.parse_to_dict(str(docx_path))
-full_report = AssessmentParser().parse(assessment)
-
-reviewer = IUCNAssessmentReviewer()
-violations = reviewer.clean_up_violations(
-    list(reviewer.review_full_report(full_report))
-)
-
-for violation in violations:
-    print(violation.to_dict())
-```
-
-## Project Structure
-
-```text
-iucn_rules_checker/
-|- checkers/
-|  `- README.md
-|- evaluation/
-|  |- README.md
-|  |- evaluation.ipynb
-|  |- IUCN_submissions_evaluation.xlsx
-|  `- test_doc_rules_based.docx
-|- test_word_document/
-|  |- README.md
-|  `- test_word_document.ipynb
-|- unittests/
-|  `- test_*.py
-|- README.md
-|- assessment_parser.py
-|- assessment_reviewer.py
-`- violation.py
-```
 
 ## Adding Or Updating Rules
 

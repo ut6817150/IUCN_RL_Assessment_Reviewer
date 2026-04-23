@@ -1,7 +1,5 @@
 # llm_rag
 
-## Purpose
-
 `llm_rag/` contains the retrieval-augmented generation pipeline used to review
 IUCN Red List assessment drafts against a curated reference library of official
 IUCN documents.
