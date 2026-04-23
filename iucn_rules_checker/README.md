@@ -355,14 +355,21 @@ for the fuller evaluation notes.
 
 ## Test Word Document
 
-Sample files used for Word-document testing and notebook-based inspection live
-in `test_word_document/`.
+The notebook workflow used for Word-document testing and inspection lives in
+`test_word_document/`.
 
 Current contents:
 
-- `test_word_document/Acrocarpus_fraxinifolius_JP.docx`
 - `test_word_document/test_word_document.ipynb`
 - `test_word_document/README.md`
+
+The original `test_word_document/Acrocarpus_fraxinifolius_JP.docx` sample file
+is not included in this repository for confidentiality reasons. To use the
+notebook, provide your own `.docx` assessment file.
+
+During development, this notebook workflow was used to spot check real IUCN
+assessment documents provided by Kew Gardens. Those documents are not included
+in the repository because they are confidential.
 
 The notebook is used for:
 
@@ -385,13 +392,15 @@ Open:
 
 and edit the path cell:
 
-- leave `CUSTOM_DOCX_PATH = None` to use the bundled sample Word document
-- set `CUSTOM_DOCX_PATH` to your own file path to test a different `.docx`
+- set `CUSTOM_DOCX_PATH` to your own file path to test a `.docx`
+
+If `CUSTOM_DOCX_PATH` is left as `None`, the notebook will stop with a reminder
+to provide a local file path.
 
 Example:
 
 ```python
-CUSTOM_DOCX_PATH = r"G:\\path\\to\\your_assessment.docx"
+CUSTOM_DOCX_PATH = "path/to/your_assessment.docx"
 ```
 
 The notebook will then:
@@ -449,7 +458,6 @@ iucn_rules_checker/
 |  `- test_doc_rules_based.docx
 |- test_word_document/
 |  |- README.md
-|  |- Acrocarpus_fraxinifolius_JP.docx
 |  `- test_word_document.ipynb
 |- unittests/
 |  `- test_*.py

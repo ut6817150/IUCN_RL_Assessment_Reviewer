@@ -87,21 +87,15 @@ and then `cd` into the repo root.
 Python 3.12 is recommended because the project has been developed and tested
 against that environment.
 
-```bash
-python -m venv .venv
-```
-
-Activate the environment.
-
-On Windows PowerShell:
-
 ```powershell
+# Windows PowerShell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-On macOS/Linux:
-
 ```bash
+# macOS/Linux
+python -m venv .venv
 source .venv/bin/activate
 ```
 
@@ -120,7 +114,7 @@ notebook support used by the evaluation notebooks.
 
 ### 4. Prepare An OpenRouter API Key
 
-When running locally, users should have an OpenRouter API key:
+When running locally, users must provide their own OpenRouter API key:
 
 ```text
 https://openrouter.ai/
@@ -129,22 +123,11 @@ https://openrouter.ai/
 The app assumes OpenRouter-backed model access for the LLM feedback and RAG
 chat workflows.
 
-You can either:
-
-- enter your own OpenRouter API key in the app sidebar when prompted
-- set one of the preset environment variables used by the sidebar configuration
-
-The current preset environment-variable names are defined in `ui/app_config.py`:
-
-```text
-Openrouter_API_key_Steve_Bachman
-JackAPIKey
-OR_TOKEN
-```
-
-For local development, the simplest option is usually to paste your own
-OpenRouter key into the sidebar using the custom API-key option. The
-rules-based feedback tab does not require an API key.
+The preconfigured API-key options are deployment-specific and will not work
+after cloning the repository locally unless you also configure matching local
+environment variables. For local development, use the sidebar option to enter
+your own OpenRouter API key. The rules-based feedback tab does not require an
+API key.
 
 ### 5. Start The App
 
@@ -226,12 +209,14 @@ Main responsibilities:
 - parse heading structure
 - extract paragraphs, lists, tables, comments, and rich-text fields
 - expose `parse_to_dict(...)` for app and notebook use
-- provide notebook workflows for parser inspection and evaluation
+- provide notebooks for parser inspection, unit-style checks, and batch
+  evaluation over fixture documents
 
 Important files and folders:
 
 - `preprocessing/assessment_processor.py`
 - `preprocessing/test_preprocessing/`
+  Parser notebooks and DOCX fixtures.
 
 For more detail, see:
 
@@ -291,10 +276,21 @@ Important files and folders:
 
 - `simplified_llm_api_script/llm_checker_v2.py`
 - `simplified_llm_api_script/grid_test.py`
+- `simplified_llm_api_script/IUCN_LLM_checks.md`
+- `simplified_llm_api_script/json_converted/`
+  Example parsed assessment JSON files used by the CLI and evaluation runner.
+- `simplified_llm_api_script/grid_outputs/`
+  Generated grid-evaluation outputs. These are not read by the app runtime.
+- `simplified_llm_api_script/evaluation/`
+  Evaluation spreadsheets and test files, when present.
 - `simplified_llm_api_script/prompt_library/system_prompt.md`
 - `simplified_llm_api_script/prompt_library/rules/`
 - `simplified_llm_api_script/unit_tests/`
 - `simplified_llm_api_script/docs/review_assessment_integration.md`
+
+The optional `simplified_llm_api_script/converted/` folder is only a local
+input folder for regenerating parsed JSON with `assessment_processor.py`; the
+reviewer itself consumes parsed dictionaries or JSON files.
 
 The prompt library currently includes rules for category justification,
 geographic range, population, habitats, use and trade, threats, conservation,
@@ -377,7 +373,12 @@ assets/IUCN_Kew_header.png
 
 ## Testing
 
-The repository contains several test and evaluation layers.
+The repository contains several test and evaluation layers. Install the root
+dependencies first:
+
+```bash
+python -m pip install -r requirements.txt
+```
 
 ### Rules-Based Unit Tests
 
@@ -396,9 +397,10 @@ iucn_rules_checker/unittests/README.md
 ### Assessment Parser Tests
 
 The uploaded-assessment parser in `preprocessing/assessment_processor.py` is
-tested through notebooks rather than a conventional pytest file.
+tested through notebooks rather than a conventional pytest file. The notebooks
+can be run from the repository root or from `preprocessing/test_preprocessing/`.
 
-Open and run:
+Unit-style parser checks:
 
 ```text
 preprocessing/test_preprocessing/unit_tests.ipynb
@@ -406,8 +408,25 @@ preprocessing/test_preprocessing/unit_tests.ipynb
 
 This notebook contains focused parser checks for rich-text rendering, table
 extraction, heading detection, DOCX parsing, HTML parsing, and error handling.
-It creates small temporary fixtures inside the notebook and prints `PASS` or
-`FAIL` for each test section.
+It uses generated DOCX/HTML fixtures plus selected real DOCX fixtures, and
+prints `PASS` or `FAIL` for each test section.
+
+Manual output inspection:
+
+```text
+preprocessing/test_preprocessing/test_output_format.ipynb
+```
+
+Batch parser evaluation:
+
+```text
+preprocessing/test_preprocessing/evaluation_tests_batch.ipynb
+```
+
+The batch evaluation notebook evaluates the DOCX fixture set in
+`preprocessing/test_preprocessing/word assessment files/` and reports parser
+quality metrics such as text similarity, schema completeness, heading recall,
+rich-text coverage, and comment-structure checks.
 
 ### RAG Unit Tests
 
@@ -433,6 +452,10 @@ python -m pytest -q simplified_llm_api_script/unit_tests
 
 These tests use mock providers and do not require live LLM calls.
 
+The `simplified_llm_api_script/grid_test.py` script is an evaluation runner
+that makes live provider calls and writes to `simplified_llm_api_script/grid_outputs/`;
+it is not part of the unit-test suite.
+
 ### Notebook Evaluation
 
 Notebook-based inspection and evaluation workflows provide qualitative and
@@ -451,16 +474,27 @@ llm_rag/evaluation/
 
 Examples of what the notebooks evaluate:
 
-- `preprocessing/test_preprocessing/evaluation_tests.ipynb`
+- `preprocessing/test_preprocessing/test_output_format.ipynb`
+  Parses one selected `.docx`, `.html`, or `.htm` file and prints the parsed
+  dictionary as formatted JSON for manual inspection.
+- `preprocessing/test_preprocessing/unit_tests.ipynb`
+  Runs controlled parser checks and selected real-document regressions for
+  rich text, headings, tables, DOCX/HTML parsing, error handling, output
+  invariants, and deterministic output.
+- `preprocessing/test_preprocessing/evaluation_tests_batch.ipynb`
   Qualitatively and quantitatively checks parser output, including heading
   recall, text preservation, rich-text preservation, table-cell extraction,
-  comments, and overall parser quality.
+  comments, raw DOCX/XML consistency checks, and overall parser quality across
+  the fixture batch.
 - `iucn_rules_checker/evaluation/evaluation.ipynb`
   Runs targeted checker sections from a purpose-built Word document so rule
   behavior can be inspected checker by checker.
 - `iucn_rules_checker/test_word_document/test_word_document.ipynb`
-  Runs the rules-based reviewer on a realistic sample assessment and displays
-  the resulting violations for manual inspection.
+  Runs the rules-based reviewer on a user-provided Word assessment and displays
+  the resulting violations for manual inspection. During development, this
+  workflow was used to spot check real IUCN assessment documents provided by
+  Kew Gardens; those documents are not included in the repository for
+  confidentiality reasons.
 - `llm_rag/evaluation/smoke_and_inspection/`
   Contains notebooks for inspecting preprocessed reference assets, vector-db
   build outputs, deterministic threshold lookup, and broad retrieval behavior.

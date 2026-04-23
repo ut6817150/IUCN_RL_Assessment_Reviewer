@@ -5,14 +5,18 @@ rules-based system on a Word document.
 
 ## Files In This Folder
 
-- `Acrocarpus_fraxinifolius_JP.docx`
-  Bundled sample Word document used for the default notebook run.
 - `test_word_document.ipynb`
-  Notebook that loads a Word document, converts it to a Python dict, parses the resulting dictionary with
-  `AssessmentParser`, and then generates violations with
-  `IUCNAssessmentReviewer`.
+  Notebook that loads a user-provided Word document, converts it to a Python
+  dict, parses the resulting dictionary with `AssessmentParser`, and then
+  generates violations with `IUCNAssessmentReviewer`.
 - `README.md`
   This document.
+
+## Confidential Test Document
+
+During development, this workflow was used to spot check real IUCN assessment
+documents provided by Kew Gardens. Those assessment documents are not included
+in this repository because they are confidential.
 
 ## How It Works
 
@@ -28,31 +32,22 @@ package:
 4. `clean_up_violations(...)` is applied before the results are displayed so
    the printed output is easier to read.
 
-## Run The Bundled Sample
+## Test Your Own Word Document
 
 Open:
 
 - `test_word_document/test_word_document.ipynb`
 
-Leave:
+and change the path cell so that `CUSTOM_DOCX_PATH` points to your own `.docx`
+file.
 
-```python
-CUSTOM_DOCX_PATH = None
-```
-
-and run the notebook cells in order. The notebook will use:
-
-- `test_word_document/Acrocarpus_fraxinifolius_JP.docx`
-
-## Test Your Own Word Document
-
-Open the same notebook and change the path cell so that `CUSTOM_DOCX_PATH`
-points to your own `.docx` file.
+If `CUSTOM_DOCX_PATH` is left as `None`, the notebook will stop with a reminder
+to provide a local file path.
 
 Example:
 
 ```python
-CUSTOM_DOCX_PATH = r"G:\\path\\to\\your_assessment.docx"
+CUSTOM_DOCX_PATH = "path/to/your_assessment.docx"
 ```
 
 Then run the notebook cells again. The notebook will:
