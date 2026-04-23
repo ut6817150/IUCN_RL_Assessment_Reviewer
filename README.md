@@ -72,15 +72,19 @@ Use the sidebar to:
 
 ### 1. Clone The Repository
 
-If cloning from the Hugging Face Space repository:
+Clone the GitHub source repository:
 
 ```bash
-git clone https://huggingface.co/spaces/SWE-Group-Project/IUCN_Assessment_reviewer
-cd IUCN_Assessment_reviewer
+git clone https://github.com/ut6817150/IUCN_RL_Assessment_Reviewer.git
+cd IUCN_RL_Assessment_Reviewer
 ```
 
-If you are using a separate project Git remote, clone that repository instead
-and then `cd` into the repo root.
+SSH alternative:
+
+```bash
+git clone git@github.com:ut6817150/IUCN_RL_Assessment_Reviewer.git
+cd IUCN_RL_Assessment_Reviewer
+```
 
 ### 2. Create A Python Environment
 
